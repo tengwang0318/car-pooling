@@ -25,10 +25,11 @@ class Request:
         self.end_latitude = end_latitude
 
         self.start_node = find_nearest_node(lat=start_latitude, lon=start_longitude, idx_dic=idx_dic,
-                                            resolution=ENV["resolution"])
+                                            resolution=ENV["RESOLUTION"])
         self.end_node = find_nearest_node(lat=end_latitude, lon=end_longitude, idx_dic=idx_dic,
-                                          resolution=ENV["resolution"])
-        self.path_node_list = nx.shortest_path(G, self.start_node, self.end_node, weight="length")
+                                          resolution=ENV["RESOLUTION"])
+        self.path_node_list = nx.shortest_path(G, self.start_node, self.end_node, weight="length") # 可能no path， 需要考虑下
+
         route_gdf = ox.routing.route_to_gdf(G, self.path_node_list)
         self.path_distance_list = list(route_gdf['length'])
 

@@ -1,6 +1,7 @@
 import h3
 from geopy.distance import geodesic
 import osmnx as ox
+from env import coord_2_graph_idx
 
 
 def find_nearest_node(lat, lon, idx_dic: dict[str, list], resolution):
@@ -35,4 +36,4 @@ def find_nearest_node(lat, lon, idx_dic: dict[str, list], resolution):
             break
         k += 1
 
-    return min_lat, min_lon
+    return coord_2_graph_idx[(min_lat, min_lon)]
