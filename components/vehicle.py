@@ -1,26 +1,32 @@
 import h3
-from env import ENV
+from env import ENV, G
+from request import Request
+
 
 class Vehicle:
     def __init__(self,
                  latitude: float,
                  longitude: float,
-                 G,
+
+                 request1: Request,
+                 request2: Request,
+
                  current_capacity=0,
                  max_capacity=2,
                  status="EMPTY",
                  velocity=15,
+
                  path_node_list1=[],
                  pre_sum_dis1=[],
-                 current_idx=0,
 
                  path_node_list2=[],
                  pre_sum_dis2=[],
 
+                 current_idx=0,
                  current_distance=0,
                  current_requests=[]
                  ):
-        # self.env = env
+
         self.status = status  # EMPTY, IDLE, FULL CAPACITY, PARTIALLY FULL
         self.latitude = latitude
         self.longitude = longitude
@@ -44,13 +50,18 @@ class Vehicle:
         self.n1 = len(self.path_node_list1)
         self.n2 = len(self.path_node_list2)
 
-        self.G = G
+        # self.G = G
 
-    def update_path(self, path_node_list1, path_distance_list1, request1, path_node_list2, path_distance_list2,
-                    request2):
+    def update_path(self, request1: Request, request2: Request):
         # if node list1 is None, then node list2 must be None too.
         # if node list1 is not None, node list2 is None
         # if both node list1 and node list2 are not None,
+        path_node_list1 = request1.path_node_list if request1 else None
+        path_distance_list1 = request1.path_distance_list if request1 else None
+
+        path_node_list2 = request2.path_node_list if request2 else None
+        path_distance_list2 = request2.path_distance_list if request2 else None
+
         self.current_distance = 0
         if path_distance_list1 and path_node_list1:
             self.path_node_list1 = path_node_list1
