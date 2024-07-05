@@ -13,6 +13,8 @@ class Request:
                  end_longitude: float,
                  end_latitude: float,
                  enable_share: bool,
+                 is_pickup_request: bool,
+                 is_dropoff_request:bool
                  ):
         global ID
         self.ID = ID
@@ -31,3 +33,5 @@ class Request:
         self.path_distance_list = list(route_gdf['length'])
 
         self.enable_share = enable_share
+        self.is_pickup_request = is_pickup_request
+        self.is_dropoff_request = is_dropoff_request
