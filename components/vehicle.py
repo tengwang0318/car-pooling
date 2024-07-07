@@ -107,17 +107,6 @@ class Vehicle:
             while self.current_idx < self.n1 and self.current_distance < self.pre_sum_dis1[self.current_idx]:
                 self.current_idx += 1
 
-                # print(len(self.path_node_list1))
-                # print(len(self.pre_sum_dis1))
-                # print(self.n1)
-                #
-                # print(self.ID)
-                # print(self.path_node_list1)
-                #
-                # print("---\n\n")
-                # print(self.pre_sum_dis1)
-                # raise KeyError
-
             temp_idx = self.current_idx if self.current_idx < self.n1 else self.current_idx - 1
             self.latitude, self.longitude = graph_idx_2_coord[self.path_node_list1[temp_idx]]
             # node = G[self.path_node_list1[temp_idx]]

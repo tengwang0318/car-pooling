@@ -1,6 +1,5 @@
 import h3
 from geopy.distance import geodesic
-import osmnx as ox
 from env import coord_2_graph_idx
 
 

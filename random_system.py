@@ -1,5 +1,6 @@
 from components.vehicle import Vehicle
 from components.vehicle import Request
+import random
 from env import *
 
 num_vehicles = 15
