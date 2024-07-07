@@ -1,3 +1,4 @@
+import datetime
 import os
 import networkx as nx
 import osmnx as ox
@@ -51,7 +52,8 @@ def load_csv_and_drop_duplication(file_path):
     print(f"数据已保存到 {new_file_path}")
 
 
-def filter_outliers(path, threshold: int, min_lng: float, max_lng: float, min_lat: float, max_lat: float):
+def filter_outliers(path, threshold: int, min_lng: float, max_lng: float, min_lat: float, max_lat: float, year, month,
+                    day, ):
     df = pd.read_csv(path)
     df['gap'] = df['order_end_time'] - df['order_start_time']
     df = df[df['gap'] <= threshold]
@@ -61,6 +63,15 @@ def filter_outliers(path, threshold: int, min_lng: float, max_lng: float, min_la
             (df['order_lat'] > min_lat) & (df['order_lat'] < max_lat) &
             (df['dest_lng'] > min_lng) & (df['dest_lng'] < max_lng) &
             (df['dest_lat'] > min_lat) & (df['dest_lat'] < max_lat)]
+
+    specific_date_low_bound = datetime.datetime(year, month, day, 6, 0)
+    specific_date_high_bound = datetime.datetime(year, month, day, 22, 0)
+
+    low_bound_timestamp, high_bound_timestamp = specific_date_low_bound.timestamp(), specific_date_high_bound.timestamp()
+
+    df = df[(df['order_start_time'] >= low_bound_timestamp) & (df['order_end_time'] <= high_bound_timestamp)]
+    df['order_start_time'] = df['order_start_time'] - low_bound_timestamp
+    df['order_end_time'] = df['order_end_time'] - low_bound_timestamp
 
     df.to_csv(path, index=False)
 
@@ -73,5 +84,7 @@ if __name__ == '__main__':
     if not os.path.exists(path2):
         load_csv_and_drop_duplication("../data/data20161102/order_20161102.csv")
     threshold = 3600
-    filter_outliers(path1, threshold, min_lng=102.989623, max_lng=104.8948475, min_lat=30.09155, max_lat=31.4370968)
-    filter_outliers(path2, threshold, min_lng=102.989623, max_lng=104.8948475, min_lat=30.09155, max_lat=31.4370968)
+    filter_outliers(path1, threshold, min_lng=102.989623, max_lng=104.8948475, min_lat=30.09155, max_lat=31.4370968,
+                    year=2016, month=11, day=1)
+    filter_outliers(path2, threshold, min_lng=102.989623, max_lng=104.8948475, min_lat=30.09155, max_lat=31.4370968,
+                    year=2016, month=11, day=2)

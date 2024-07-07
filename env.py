@@ -6,7 +6,11 @@ ENV = {
     "RESOLUTION": 10,
     "map_name": "chengdu.graphml",
     "time": 2,
-    "money_per_meter":0.05
+    "money_per_meter": 0.05,
+    "min_lng": 102.989623,
+    "max_lng": 104.8948475,
+    "min_lat": 30.09155,
+    "max_lat": 31.4370968
 
 }
 coord_2_graph_idx = dict()
