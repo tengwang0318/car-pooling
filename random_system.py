@@ -2,9 +2,10 @@ from components.vehicle import Vehicle
 from components.vehicle import Request
 import random
 from env import *
+from components.user import User
 
 num_vehicles = 15
-
+users = [User() for i in range(20)]
 vehicles = []
 for _ in range(num_vehicles):
     lat, lon = random.choice(list(zip(nodes_lat, nodes_lon)))
@@ -23,7 +24,8 @@ for _ in range(num_requests):
         end_latitude=end_lat,
         enable_share=True,
         is_pickup_request=False,
-        is_dropoff_request=True
+        is_dropoff_request=True,
+        users=[users[_]]
     )
     requests.append(request)
 for _ in range(num_requests):
@@ -36,7 +38,8 @@ for _ in range(num_requests):
         end_latitude=end_lat,
         enable_share=False,
         is_pickup_request=False,
-        is_dropoff_request=True
+        is_dropoff_request=True,
+        users=[users[_]]
     )
     requests.append(request)
 
@@ -50,7 +53,9 @@ for i in range(10):
         end_latitude=end_lat,
         enable_share=False,
         is_pickup_request=True,
-        is_dropoff_request=False
+        is_dropoff_request=False,
+        users=[]
+
     )
     vehicles[i].update([temp_request, requests[i]])
 
@@ -67,7 +72,8 @@ for i in range(5):
         end_latitude=v1_lat,
         enable_share=True,
         is_pickup_request=True,
-        is_dropoff_request=False
+        is_dropoff_request=False,
+        users=[]
     )
     request2 = Request(
         start_longitude=v1_lon,
@@ -76,7 +82,9 @@ for i in range(5):
         end_latitude=v2_lat,
         enable_share=True,
         is_pickup_request=True,
-        is_dropoff_request=False
+        is_dropoff_request=False,
+        users=[users[10 + 2 * i]],
+
     )
     request3 = Request(
         start_longitude=v2_lon,
@@ -86,6 +94,7 @@ for i in range(5):
         enable_share=True,
         is_pickup_request=False,
         is_dropoff_request=True,
+        users=[users[10 + 2 * i], users[10 + 2 * i + 1]]
     )
     request4 = Request(
         start_longitude=v1_lon_end,
@@ -94,10 +103,11 @@ for i in range(5):
         end_latitude=v2_lat_end,
         enable_share=True,
         is_pickup_request=False,
-        is_dropoff_request=True
+        is_dropoff_request=True,
+        users=[users[11 + 2 * i]]
 
     )
-    vehicles[10+i].update([request1, request2, request3, request4])
+    vehicles[10 + i].update([request1, request2, request3, request4])
 #
 # for i in range(3):
 #     start_lat, start_lon = vehicles[i].latitude, vehicles[i].longitude
@@ -157,3 +167,9 @@ for step in range(10000):  # 假设运行100步
     #         f"Vehicle {i}: Latitude = {vehicle.latitude}, Longitude = {vehicle.longitude}, Status = {vehicle.status}, Capacity = {vehicle.current_capacity}")
 
     # 请根据需要调整变量和参数
+print("-----\n\n")
+for vehicle in vehicles:
+    print(f"Vehicle {vehicle.ID}'s total distance is {vehicle.total_distance}")
+print("-----\n\n")
+for user in users:
+    print(f"User {user.user_id}'s cost is {user.cost}")

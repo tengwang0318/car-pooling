@@ -1,6 +1,7 @@
 import h3
 from env import ENV, G, coord_2_graph_idx, graph_idx_2_coord
 from .request import Request
+from utils.cost import calculate_cost_for_finished_request, calculate_cost_for_unfinished_request
 
 ID = 0
 
@@ -17,6 +18,8 @@ class Vehicle:
         global ID
         self.ID = ID
         ID += 1
+
+        self.time = 0
 
         self.status = status  # EMPTY, IDLE, FULL CAPACITY, PARTIALLY FULL
         self.latitude = latitude
@@ -38,12 +41,28 @@ class Vehicle:
 
         self.current_idx = 0  # 0 represents the middle position between node 1 and node 2
         self.current_distance = 0
+        self.total_distance = 0
+
         self.n1 = 0
         self.n2 = 0
 
     def update(self, requests: list[Request]):
+        current_distance_high_bound = 0
+        previous_distance_high_bound = 0
+        for request in self.current_requests:
+            current_distance_high_bound += request.request_total_distance
+            if self.current_distance < current_distance_high_bound:
+                calculate_cost_for_unfinished_request(request, self.current_requests, previous_distance_high_bound)
+                break
+            else:
+                calculate_cost_for_finished_request(request)
+                previous_distance_high_bound = current_distance_high_bound
+
+        self.total_distance += self.current_distance
+        self.current_distance = 0
         if requests:
             self.current_requests = requests
+
             self.current_idx = 0
 
             one_request = True
@@ -98,6 +117,8 @@ class Vehicle:
             self.has_sharing_request = True
 
     def step(self):
+        self.time += ENV['time']
+
         # 让他运行固定的时间，如果node list1 到终点了，那么就停下来，让他下车。
 
         if self.pre_sum_dis1 and self.path_node_list1:
@@ -107,21 +128,27 @@ class Vehicle:
             while self.current_idx < self.n1 and self.current_distance < self.pre_sum_dis1[self.current_idx]:
                 self.current_idx += 1
 
-            temp_idx = self.current_idx if self.current_idx < self.n1 else self.current_idx - 1
+            # temp_idx = self.current_idx if self.current_idx < self.n1 else self.current_idx - 1
+            temp_idx = self.current_idx - 1
             self.latitude, self.longitude = graph_idx_2_coord[self.path_node_list1[temp_idx]]
             # node = G[self.path_node_list1[temp_idx]]
             # self.latitude = node['x']
             # self.longitude = node['y']
-            self.h3idx = h3.geo_to_h3(self.latitude, self.latitude, ENV['RESOLUTION'])
+            self.h3idx = h3.geo_to_h3(self.latitude, self.longitude, ENV['RESOLUTION'])
 
             if self.current_idx == self.n1 or self.current_distance >= self.pre_sum_dis1[-1]:  # 或者判断距离
+                self.total_distance += self.current_distance
                 self.current_distance = 0
                 self.current_idx = 0
 
                 temp_request = self.current_requests.pop(0)
+
                 while not temp_request.is_dropoff_request:
+                    calculate_cost_for_finished_request(temp_request)
                     temp_request = self.current_requests.pop(0)
-                print(f"vehicle {self.ID} 跑完了一单 {self.longitude, self.latitude}")
+                calculate_cost_for_finished_request(temp_request)
+
+                print(f"vehicle {self.ID} 在 {self.time} s 跑完了一单 {self.longitude, self.latitude}")
 
                 self.current_capacity -= 1
                 self.update_status()

@@ -19,4 +19,5 @@
 ### Data Preprocess
 
 - [ ] time, position, filter.
+- [ ] the way of calculating the price.
 

@@ -5,7 +5,8 @@ import osmnx as ox
 ENV = {
     "RESOLUTION": 10,
     "map_name": "chengdu.graphml",
-    "time": 2
+    "time": 2,
+    "money_per_meter":0.05
 
 }
 coord_2_graph_idx = dict()
