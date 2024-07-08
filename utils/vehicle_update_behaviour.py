@@ -17,16 +17,16 @@ def vehicle_update_for_one_user(vehicle: Vehicle,
     if path_node_lists is None:
         path_node_lists = [None, None]
     vehicle_start_longitude, vehicle_start_latitude = vehicle.longitude, vehicle.latitude
-    vehicle_node = find_nearest_node(vehicle_start_latitude, vehicle_start_longitude, idx_dic, ENV['resolution'])
+    vehicle_node = find_nearest_node(vehicle_start_latitude, vehicle_start_longitude, idx_dic, ENV['RESOLUTION'])
     vehicle_start_latitude, vehicle_start_longitude = graph_idx_2_coord[vehicle_node]
 
     req_start_lat, req_start_lon = user.start_latitude, user.start_longitude
     req_end_lat, req_end_lon = user.end_latitude, user.end_longitude
 
     requests = []
-    request_start_nearest_node = find_nearest_node(req_start_lat, req_start_lon, idx_dic, ENV['resolution'])
+    request_start_nearest_node = find_nearest_node(req_start_lat, req_start_lon, idx_dic, ENV['RESOLUTION'])
     req_start_lat, req_start_lon = graph_idx_2_coord[request_start_nearest_node]
-    request_end_nearest_node = find_nearest_node(req_end_lat, req_end_lon, idx_dic, ENV["resolution"])
+    request_end_nearest_node = find_nearest_node(req_end_lat, req_end_lon, idx_dic, ENV["RESOLUTION"])
     req_end_lat, req_end_lon = graph_idx_2_coord[request_end_nearest_node]
 
     request1 = Request(

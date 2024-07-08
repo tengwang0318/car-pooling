@@ -40,12 +40,12 @@ def load_csv_and_drop_duplication(file_path):
             return pd.Series([None, None])
 
     # 计算每一行的数据并更新进度条
-    df[['itinerary_node_list', 'itinerary_segment_dis_list']] = df.progress_apply(
-        lambda row: calculate_itinerary(row), axis=1
-    )
-
-    # 删除包含错误计算结果的行
-    df = df.dropna(subset=['itinerary_node_list', 'itinerary_segment_dis_list'])
+    # df[['itinerary_node_list', 'itinerary_segment_dis_list']] = df.progress_apply(
+    #     lambda row: calculate_itinerary(row), axis=1
+    # )
+    #
+    # # 删除包含错误计算结果的行
+    # df = df.dropna(subset=['itinerary_node_list', 'itinerary_segment_dis_list'])
 
     # 保存结果到新的 CSV 文件
     df.to_csv(new_file_path, index=False)
@@ -72,7 +72,7 @@ def filter_outliers(path, threshold: int, min_lng: float, max_lng: float, min_la
     df = df[(df['order_start_time'] >= low_bound_timestamp) & (df['order_end_time'] <= high_bound_timestamp)]
     df['order_start_time'] = df['order_start_time'] - low_bound_timestamp
     df['order_end_time'] = df['order_end_time'] - low_bound_timestamp
-
+    df = df.sort_values(['order_start_time', "order_end_time"], axis=0)
     df.to_csv(path, index=False)
 
 

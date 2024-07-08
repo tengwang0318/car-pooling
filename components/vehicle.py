@@ -113,6 +113,7 @@ class Vehicle:
             else:
                 self.has_sharing_request = True
         else:
+            print(f"vehicle {self.ID} become empty again")
             self.status = "EMPTY"
             self.has_sharing_request = True
 
