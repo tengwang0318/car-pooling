@@ -105,7 +105,7 @@ class Vehicle:
             self.status = "PARTIALLY FULL"
             found = False
             for request in self.current_requests:
-                if not request.enable_share:
+                if request.is_dropoff_request and not request.enable_share :
                     found = True
                     break
             if found:

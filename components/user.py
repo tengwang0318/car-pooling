@@ -14,4 +14,3 @@ class User:
         self.end_latitude = end_latitude
         self.end_longitude = end_longitude
 
-
