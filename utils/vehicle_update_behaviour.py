@@ -232,3 +232,32 @@ def vehicle_update_for_two_users_after_u1_heading(vehicle: Vehicle,
     vehicle.has_sharing_request = bool(
         sum([request.enable_share for request in requests if request.is_dropoff_request]))
     vehicle.update(requests)
+
+
+def vehicle_update_for_repositioning(vehicle: Vehicle,
+                                     latitude: float,
+                                     longitude: float,
+                                     path_node_lists=(None)):
+    vehicle_start_longitude, vehicle_start_latitude = vehicle.longitude, vehicle.latitude
+    vehicle_node = find_nearest_node(vehicle_start_latitude, vehicle_start_longitude, idx_dic, ENV["RESOLUTION"])
+    vehicle_start_latitude, vehicle_start_longitude = graph_idx_2_coord[vehicle_node]
+
+    reposition_latitude, reposition_longitude = latitude, longitude
+    reposition_node = find_nearest_node(reposition_latitude, reposition_longitude, idx_dic, ENV['RESOLUTION'])
+    request = Request(
+        start_latitude=vehicle_start_latitude,
+        start_longitude=vehicle_start_longitude,
+        end_longitude=reposition_longitude,
+        end_latitude=reposition_longitude,
+        start_node=vehicle_node,
+        end_node=reposition_node,
+        path_node_list=path_node_lists[0],
+        enable_share=True,
+        is_pickup_request=False,
+        is_dropoff_request=False,
+        is_idle_request=True,
+        users=[]
+    )
+    requests = [request]
+    vehicle.update_status(is_idle=True)
+    vehicle.update(requests)

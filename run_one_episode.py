@@ -46,6 +46,7 @@ def run_one_episode():
         while stack and stack[-1][0] < current_timestamp:
             user = stack.pop()[1]
             current_users.append(user)
+        # 日后可以考虑加一个redis block pipeline
         while current_users:
             temp_user = current_users.pop()
             for vehicle in vehicles:
@@ -57,6 +58,8 @@ def run_one_episode():
                     except:
                         continue
 
-
+        for vehicle in vehicles:
+            # 考虑多线程
+            vehicle.step()
 if __name__ == '__main__':
     run_one_episode()

@@ -9,7 +9,7 @@ ID = 0
 
 class Request:
     def __init__(self,
-                 enable_share: bool,  # 默认pickup request 是 False or True, 下一版改为true
+                 enable_share: bool,  # 默认pickup request 是 True, drop off request depends on user's willing
                  is_pickup_request: bool,
                  is_dropoff_request: bool,
                  users: list[User],
@@ -20,6 +20,7 @@ class Request:
                  start_node=None,
                  end_node=None,
                  path_node_list=None,
+                 is_idle_request: bool = False,
                  ):
         global ID
         self.ID = ID
@@ -28,9 +29,6 @@ class Request:
         if start_node and end_node:
             self.start_node = start_node
             self.end_node = end_node
-
-
-
         else:
             self.start_node = find_nearest_node(lat=start_latitude, lon=start_longitude, idx_dic=idx_dic,
                                                 resolution=ENV["RESOLUTION"])
@@ -46,7 +44,6 @@ class Request:
             self.start_latitude, self.start_longitude = graph_idx_2_coord[self.start_node]
             self.end_latitude, self.end_longitude = graph_idx_2_coord[self.end_node]
 
-
         if path_node_list:
             self.path_node_list = path_node_list
         else:
@@ -61,6 +58,7 @@ class Request:
         self.enable_share = enable_share
         self.is_pickup_request = is_pickup_request
         self.is_dropoff_request = is_dropoff_request
+        self.is_idle_request = is_idle_request
 
         # 还没用到
         self.start_time = None

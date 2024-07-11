@@ -5,7 +5,7 @@ import osmnx as ox
 ENV = {
     "RESOLUTION": 10,
     "map_name": "chengdu.graphml",
-    "time": 2,
+    "time": 60,
     "money_per_meter": 0.005,
     "min_lng": 102.989623,
     "max_lng": 104.8948475,

@@ -2,7 +2,10 @@
 
 ### Simulator:
 
-- [ ] a system that takes time, action into consideration at the same time.
+- [x] a system that takes time, action into consideration at the same time.
+- [x] IDLE
+- [ ] multi processing 
+- [ ] 奖励机制
 
 ### Baseline
 
@@ -18,6 +21,6 @@
 
 ### Data Preprocess
 
-- [ ] time, position, filter.
-- [ ] the way of calculating the price.
+- [x] time, position, filter.
+- [x] the way of calculating the price.
 
