@@ -31,5 +31,13 @@ for lat, lon in zip(nodes_lat, nodes_lon):
     idx_dic[idx].append((lat, lon))
 max_longitude, min_longitude = max(nodes_lon), min(nodes_lon)
 max_latitude, min_latitude = max(nodes_lat), min(nodes_lat)
-USERS= dict()
+USERS = dict()
 VEHICLES = dict()
+
+
+EMPTY_VEHICLES = set()
+FULL_CAPACITY_VEHICLES = set()
+PARTIAL_CAPACITY_VEHICLES = set()
+IDLE_VEHICLES = set()
+
+

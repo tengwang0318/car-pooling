@@ -1,3 +1,5 @@
+import sys
+
 import tqdm
 
 from env import *
@@ -6,6 +8,8 @@ from components.vehicle import Vehicle
 import pandas as pd
 import random
 from utils.vehicle_update_behaviour import *
+from dispatch import *
+import multiprocessing
 
 
 def init_vehicle(number_of_vehicle, max_lat=ENV['max_lat'], min_lat=ENV['min_lat'], max_lon=ENV['max_lng'],
@@ -17,12 +21,12 @@ def init_vehicle(number_of_vehicle, max_lat=ENV['max_lat'], min_lat=ENV['min_lat
         vehicle = Vehicle(latitude=lat, longitude=lon)
         VEHICLES[vehicle.ID] = vehicle
         vehicles.append(vehicle)
+        EMPTY_VEHICLES.add(vehicle)
     return vehicles
 
 
 def load_data(data_path=ENV['data_path']):
     df = pd.read_csv(data_path)
-    # print(df)
     stack = list()
     for order_start_time, order_lon, order_lat, dest_lon, dest_lat in \
             zip(df['order_start_time'].tolist()[::-1], df['order_lng'].tolist()[::-1], df['order_lat'].tolist()[::-1],
@@ -38,28 +42,27 @@ def load_data(data_path=ENV['data_path']):
     return stack
 
 
+def vehicle_step(vehicle: Vehicle):
+    sys.stdout.flush()
+    vehicle.step()
 def run_one_episode():
     stack = load_data()
     vehicles = init_vehicle(100)
-    for current_timestamp in tqdm.tqdm(range(0, 3600 * 16, ENV['time'])):
+    for current_timestamp in tqdm.tqdm(range(ENV['time'], 3600 * 16, ENV['time'])):
+
         current_users = []
         while stack and stack[-1][0] < current_timestamp:
             user = stack.pop()[1]
             current_users.append(user)
-        # 日后可以考虑加一个redis block pipeline
-        while current_users:
-            temp_user = current_users.pop()
-            for vehicle in vehicles:
-                if vehicle.status == "EMPTY":
-                    try:
-                        vehicle_update_for_one_user(vehicle, temp_user)
-                        print(f"vehicle {vehicle.ID} 接 {temp_user.user_id}")
-                        break
-                    except:
-                        continue
+        random_dispatch(current_users)
 
         for vehicle in vehicles:
-            # 考虑多线程
             vehicle.step()
+
+
+        # with multiprocessing.Pool(processes=4) as pool:
+        #     pool.map(vehicle_step, vehicles)
+
+
 if __name__ == '__main__':
     run_one_episode()

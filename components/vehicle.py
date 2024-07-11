@@ -1,5 +1,6 @@
 import h3
-from env import ENV, G, coord_2_graph_idx, graph_idx_2_coord
+from env import ENV, G, coord_2_graph_idx, graph_idx_2_coord, EMPTY_VEHICLES, IDLE_VEHICLES, FULL_CAPACITY_VEHICLES, \
+    PARTIAL_CAPACITY_VEHICLES
 from .request import Request
 from utils.cost import calculate_cost_for_finished_request, calculate_cost_for_unfinished_request
 
@@ -120,6 +121,7 @@ class Vehicle:
         self.n2 = len(self.path_node_list2) if self.path_node_list2 else 0
 
     def update_status(self, is_idle=False):
+        previous_status = self.status
         if not is_idle:
             if self.current_capacity == self.max_capacity:
                 self.status = "FULL CAPACITY"
@@ -141,6 +143,24 @@ class Vehicle:
         else:
             self.status = "IDLE"
             self.has_sharing_request = True
+        if previous_status != self.status:
+            if previous_status == "IDLE":
+                IDLE_VEHICLES.discard(self)
+            elif previous_status == "FULL CAPACITY":
+                FULL_CAPACITY_VEHICLES.discard(self)
+            elif previous_status == "PARTIALLY FULL":
+                PARTIAL_CAPACITY_VEHICLES.discard(self)
+            elif previous_status == "EMPTY":
+                EMPTY_VEHICLES.discard(self)
+
+            if self.status == "IDLE":
+                IDLE_VEHICLES.add(self)
+            elif self.status == "FULL CAPACITY":
+                FULL_CAPACITY_VEHICLES.add(self)
+            elif self.status == "PARTIALLY FULL":
+                PARTIAL_CAPACITY_VEHICLES.add(self)
+            elif self.status == "EMPTY":
+                EMPTY_VEHICLES.add(self)
 
     def step(self):
         self.time += ENV['time']
@@ -192,6 +212,7 @@ class Vehicle:
 
         else:
             if self.current_idx == self.n1 or self.current_distance >= self.pre_sum_dis1[-1]:  # 停到原地不动了。
+                self.update([])
                 return
 
             self.current_distance += self.velocity * ENV['time']
