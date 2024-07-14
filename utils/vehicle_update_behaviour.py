@@ -10,7 +10,9 @@ update the status of vehicle, including status, requests, position
 
 
 def vehicle_update_for_one_user(vehicle: Vehicle,
-                                user: User, path_node_lists=(None, None)):
+                                user: User,
+                                path_node_lists=(None, None),
+                                time=None):
     """
     仅考虑一个request
     """
@@ -37,11 +39,14 @@ def vehicle_update_for_one_user(vehicle: Vehicle,
         enable_share=True,  # 接客默认为true, 实际判断的时候看的是enable share && is dropoff request
         is_pickup_request=True,
         is_dropoff_request=False,
+        is_idle_request=False,
         users=[],
         start_node=vehicle_node,
         end_node=request_start_nearest_node,
-        path_node_list=path_node_lists[0]  # it may be updated later, the default value of it is None.
+        path_node_list=path_node_lists[0],  # it may be updated later, the default value of it is None.
     )
+
+    USERS[user.user_id]['pickup_time'] = request1.request_total_distance / vehicle.velocity + time
     requests.append(request1)
 
     request2 = Request(
@@ -52,21 +57,22 @@ def vehicle_update_for_one_user(vehicle: Vehicle,
         enable_share=user.enable_share,
         is_pickup_request=False,
         is_dropoff_request=True,
+        is_idle_request=False,
         users=[user],
         start_node=request_start_nearest_node,
         end_node=request_end_nearest_node,
         path_node_list=path_node_lists[1]  # it may be updated later, the default value of it is None.
     )
     requests.append(request2)
-    vehicle.has_sharing_request = bool(
-        sum([request.enable_share for request in requests if request.is_dropoff_request]))
+
     vehicle.update(requests)
 
 
 def vehicle_update_for_two_users_at_same_time(vehicle: Vehicle,
                                               user1: User,
                                               user2: User,
-                                              path_node_lists: (None, None, None, None)
+                                              path_node_lists: (None, None, None, None),
+                                              time=None,
                                               ):
     """
     默认user1更近，这里可以判断，但是没必要，我盲猜OR部分已经判断过了
@@ -104,11 +110,13 @@ def vehicle_update_for_two_users_at_same_time(vehicle: Vehicle,
         enable_share=True,
         is_pickup_request=True,
         is_dropoff_request=False,
+        is_idle_request=False,
         users=[],
         start_node=vehicle_nearest_node,
         end_node=req1_start_nearest_node,
         path_node_list=path_node_lists[0]
     )
+    USERS[user1.user_id]['pickup_time'] = time + request1.request_total_distance / vehicle.velocity
     requests.append(request1)
 
     request2 = Request(
@@ -119,11 +127,14 @@ def vehicle_update_for_two_users_at_same_time(vehicle: Vehicle,
         enable_share=True,
         is_pickup_request=True,
         is_dropoff_request=False,
+        is_idle_request=False,
         users=[user1],
         start_node=req1_start_nearest_node,
         end_node=req2_start_nearest_node,
-        path_node_list=path_node_lists[1]
+        path_node_list=path_node_lists[1],
     )
+    USERS[user2.user_id]['pickup_time'] = time + (
+            request1.request_total_distance + request2.request_total_distance) / vehicle.velocity
     requests.append(request2)
 
     req3 = Request(
@@ -134,6 +145,7 @@ def vehicle_update_for_two_users_at_same_time(vehicle: Vehicle,
         enable_share=user1.enable_share,  # 应该是True，之后再check. 应该事先就确认过了
         is_pickup_request=False,
         is_dropoff_request=True,
+        is_idle_request=False,
         users=[user1, user2],
         start_node=req2_start_nearest_node,
         end_node=req1_end_nearest_node,
@@ -149,6 +161,7 @@ def vehicle_update_for_two_users_at_same_time(vehicle: Vehicle,
         enable_share=user2.enable_share,
         is_pickup_request=False,
         is_dropoff_request=True,
+        is_idle_request=False,
         users=[user2],
         start_node=req1_end_nearest_node,
         end_node=req2_end_nearest_node,
@@ -156,15 +169,14 @@ def vehicle_update_for_two_users_at_same_time(vehicle: Vehicle,
     )
     requests.append(req4)
 
-    vehicle.has_sharing_request = bool(
-        sum([request.enable_share for request in requests if request.is_dropoff_request]))
     vehicle.update(requests)
 
 
 def vehicle_update_for_two_users_after_u1_heading(vehicle: Vehicle,
                                                   user1: User,
                                                   user2: User,
-                                                  path_node_lists: (None, None, None)):
+                                                  path_node_lists: (None, None, None),
+                                                  time=None):
     req1_end_lat = user1.end_latitude
     req1_end_lon = user1.end_longitude
     req2_start_lat = user2.start_latitude
@@ -192,12 +204,16 @@ def vehicle_update_for_two_users_after_u1_heading(vehicle: Vehicle,
         end_latitude=req2_start_lat,
         enable_share=True,
         is_pickup_request=True,
+        is_idle_request=False,
         is_dropoff_request=False,
         users=[user1],
         start_node=vehicle_nearest_node,
         end_node=req2_start_nearest_node,
-        path_node_list=path_node_lists[0]
+        path_node_list=path_node_lists[0],
+
     )
+    USERS[user2.user_id]['pickup_time'] = time + request1.request_total_distance / vehicle.velocity
+
     requests.append(request1)
 
     request2 = Request(
@@ -208,7 +224,8 @@ def vehicle_update_for_two_users_after_u1_heading(vehicle: Vehicle,
         enable_share=user2.enable_share and user1.enable_share,
         is_pickup_request=False,
         is_dropoff_request=True,
-        users=[user2, user1],
+        is_idle_request=False,
+        users=[ user1,user2],
         start_node=req2_start_nearest_node,
         end_node=req1_end_nearest_node,
         path_node_list=path_node_lists[1]
@@ -222,15 +239,15 @@ def vehicle_update_for_two_users_after_u1_heading(vehicle: Vehicle,
         end_latitude=req2_end_lat,
         enable_share=user2.enable_share,
         is_pickup_request=False,
-        is_dropoff_request=True, users=[user2],
+        is_dropoff_request=True,
+        is_idle_request=False,
+        users=[user2],
         start_node=req1_end_nearest_node,
         end_node=req2_end_nearest_node,
         path_node_list=path_node_lists[2]
     )
     requests.append(request3)
 
-    vehicle.has_sharing_request = bool(
-        sum([request.enable_share for request in requests if request.is_dropoff_request]))
     vehicle.update(requests)
 
 
@@ -248,7 +265,7 @@ def vehicle_update_for_repositioning(vehicle: Vehicle,
         start_latitude=vehicle_start_latitude,
         start_longitude=vehicle_start_longitude,
         end_longitude=reposition_longitude,
-        end_latitude=reposition_longitude,
+        end_latitude=reposition_latitude,
         start_node=vehicle_node,
         end_node=reposition_node,
         path_node_list=path_node_lists[0],
@@ -259,5 +276,4 @@ def vehicle_update_for_repositioning(vehicle: Vehicle,
         users=[]
     )
     requests = [request]
-    vehicle.update_status(is_idle=True)
-    vehicle.update(requests)
+    vehicle.update_when_idle(requests)

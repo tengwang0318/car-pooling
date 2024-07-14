@@ -9,7 +9,6 @@ import pandas as pd
 import random
 from utils.vehicle_update_behaviour import *
 from dispatch import *
-import multiprocessing
 
 
 def init_vehicle(number_of_vehicle, max_lat=ENV['max_lat'], min_lat=ENV['min_lat'], max_lon=ENV['max_lng'],
@@ -18,7 +17,7 @@ def init_vehicle(number_of_vehicle, max_lat=ENV['max_lat'], min_lat=ENV['min_lat
     for _ in range(number_of_vehicle):
         lat = random.uniform(min_lat, max_lat)
         lon = random.uniform(min_lon, max_lon)
-        vehicle = Vehicle(latitude=lat, longitude=lon)
+        vehicle = Vehicle(latitude=lat, longitude=lon,velocity=ENV["velocity"])
         VEHICLES[vehicle.ID] = vehicle
         vehicles.append(vehicle)
         EMPTY_VEHICLES.add(vehicle)
@@ -35,16 +34,20 @@ def load_data(data_path=ENV['data_path']):
                     start_latitude=order_lat,
                     start_longitude=order_lon,
                     end_latitude=dest_lat,
-                    end_longitude=dest_lon
+                    end_longitude=dest_lon,
+                    start_time=order_start_time,
                     )
         stack.append((order_start_time, user))
-        USERS[user.user_id] = user
-    return stack
+
+        USERS[user.user_id]['start_time'] = order_start_time
+
+    return stack[-10:]
 
 
 def vehicle_step(vehicle: Vehicle):
-    sys.stdout.flush()
     vehicle.step()
+
+
 def run_one_episode():
     stack = load_data()
     vehicles = init_vehicle(100)
@@ -54,15 +57,13 @@ def run_one_episode():
         while stack and stack[-1][0] < current_timestamp:
             user = stack.pop()[1]
             current_users.append(user)
-        random_dispatch(current_users)
+        random_dispatch(current_users, current_timestamp)
 
         for vehicle in vehicles:
             vehicle.step()
 
 
-        # with multiprocessing.Pool(processes=4) as pool:
-        #     pool.map(vehicle_step, vehicles)
-
-
 if __name__ == '__main__':
     run_one_episode()
+    for i in range(10):
+        print(f"user {15091-i}: {USERS[15091-i]}")

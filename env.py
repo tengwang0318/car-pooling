@@ -12,7 +12,8 @@ ENV = {
     "min_lat": 30.09155,
     "max_lat": 31.4370968,
     "data_path": "data/data20161101/order_20161101_final.csv",
-    "car_sharing_rate": 0.6
+    "car_sharing_rate": 0.6,
+    "velocity":15
 }
 coord_2_graph_idx = dict()
 graph_idx_2_coord = dict()
@@ -31,13 +32,10 @@ for lat, lon in zip(nodes_lat, nodes_lon):
     idx_dic[idx].append((lat, lon))
 max_longitude, min_longitude = max(nodes_lon), min(nodes_lon)
 max_latitude, min_latitude = max(nodes_lat), min(nodes_lat)
-USERS = dict()
+USERS = defaultdict(dict)
 VEHICLES = dict()
-
 
 EMPTY_VEHICLES = set()
 FULL_CAPACITY_VEHICLES = set()
 PARTIAL_CAPACITY_VEHICLES = set()
 IDLE_VEHICLES = set()
-
-

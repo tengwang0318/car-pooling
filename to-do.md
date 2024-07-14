@@ -4,8 +4,9 @@
 
 - [x] a system that takes time, action into consideration at the same time.
 - [x] IDLE
-- [ ] multi processing 
+- [x] multi processing 有bug，已放弃多进程计算dijkstra
 - [ ] 奖励机制
+- [ ] 弄个阻塞队列
 
 ### Baseline
 

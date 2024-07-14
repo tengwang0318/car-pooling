@@ -21,6 +21,8 @@ class Request:
                  end_node=None,
                  path_node_list=None,
                  is_idle_request: bool = False,
+                 start_time=None,
+                 end_time=None,
                  ):
         global ID
         self.ID = ID
@@ -60,9 +62,11 @@ class Request:
         self.is_dropoff_request = is_dropoff_request
         self.is_idle_request = is_idle_request
 
-        # 还没用到
-        self.start_time = None
-        self.end_time = None
+
+
+        # 尝试使用 time,发现没必要
+        self.start_time = start_time
+        self.end_time = end_time
         self.vehicle = None
 
         self.users = users
