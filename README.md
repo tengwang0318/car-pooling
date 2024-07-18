@@ -15,7 +15,17 @@
 
 ### The workflow:
 
-![image-20240718175821050](imgs/image-20240718175821050.png)
+1. Divide the whole city map into multi sub-areas.
+2. In every time range:
+   1. Based on the current relationship between requests and vehicles, utilize the greedy algorithm or cluster algorithm, and merge the adjacent sub-areas into one region until the number of order is as closed to 50 as possible (Control the size of MIP)
+   2. Classify these regions into two types: 1. Number of order is greater than number of vehicles 2. Number of order isn't greater than number of vehicles.
+      1. for type 2: MIP
+      2. for type 1: dispatch the excess vehicles into busy area until the number of vehicle equals to the number of order, by using **greedy algorithm**/**LLM**. (LLM is not suitable for this part). Then MIP.
+   3. Solve every MIPs with solver/LLM
+   4. After determining the decision for every vehicles, running the simulation process.
+3. Using the cost for every user and the waiting time as the metrics.
+
+![image-20240719002652806](imgs/procedure.png)
 
 
 
@@ -41,8 +51,6 @@ where:
 - $d_{jk}$ is the Manhattan distance between user $j$ and user $k$.
 
 #### Constraints
-
-##### Situation 1
 
 the number of empty vehicles * 2 + the number of vehicles with one sharing order <= the number of coming order
 
@@ -89,76 +97,4 @@ $$
 $$
 y_{ijk} \geq x_{ij} + x_{ik} - 1 \quad \forall i = 1, \ldots, n_1, \forall j, k = 1, \ldots, m, j \neq k
 $$
-
-##### situation 2
-
-the number of empty vehicles * 2 + the number of vehicles with one sharing order > the number of coming order
-
-1. **Each empty car either not assigned to any user or assigned to exactly two users**:
-
-$$
-\sum_{j=1}^{m} \sum_{k=1, k \neq j}^{m} y_{ijk} = 2b_i \quad \forall i = 1, \ldots, n_1
-$$
-
-2. **Each empty car can be assigned to at most one user directly**:
-
-$$
-\sum_{j=1}^{m} x_{ij} \leq 1 \quad \forall i = 1, \ldots, n_1
-$$
-
-3. **Each car with one passenger willing to share can be assigned to at most one user**:
-
-$$
-\sum_{j=1}^{m} z_{ij} \leq 1 \quad \forall i = 1, \ldots, n_2
-$$
-
-4. **Each user must be assigned to exactly one vehicle**:
-
-$$
-\sum_{i=1}^{n_1} x_{ij} + \sum_{i=1}^{n_1} \sum_{k=1, k \neq j}^{m} y_{ijk} + \sum_{i=1}^{n_2} z_{ij} = 1 \quad \forall j = 1, \ldots, m
-$$
-
-5. **Linearization Constraints for $y_{ijk}$**:
-
-$$
-y_{ijk} \leq x_{ij} \quad \forall i = 1, \ldots, n_1, \forall j, k = 1, \ldots, m, j \neq k
-$$
-
-$$
-y_{ijk} \leq x_{ik} \quad \forall i = 1, \ldots, n_1, \forall j, k = 1, \ldots, m, j \neq k
-$$
-
-$$
-y_{ijk} \geq x_{ij} + x_{ik} - 1 \quad \forall i = 1, \ldots, n_1, \forall j, k = 1, \ldots, m, j \neq k
-$$
-
-### Mathematical Formulation for Unmatching Vehicle-Order.
-
-#### Objective Function
-
-The objective is to minimize the total distance from vehicles to high-demand areas:
-
-$$
-\min \sum_{i=1}^{m} \sum_{j=1}^{n} x_{ij} \cdot d_{ij}
-$$
-
-where:
-- $x_{ij}$ is a binary variable indicating whether vehicle $i$ is assigned to area $j$ (1 if yes, 0 if no).
-- $d_{ij}$ is the Manhattan distance between vehicle $i$ and area $j$.
-
-#### Constraints
-
-1. **Each car must be assigned to one area**:
-
-$$
-\sum_{j=1}^{n} x_{ij} = 1 \quad \forall i = 1, \ldots, m
-$$
-
-2. **Each area can receive multiple cars, up to its demand**:
-
-$$
-\sum_{i=1}^{m} x_{ij} \leq q_j \quad \forall j = 1, \ldots, n
-$$
-
-where $q_j$ is the demand (number of orders) for area $j$.
 
