@@ -17,7 +17,7 @@ def init_vehicle(number_of_vehicle, max_lat=ENV['max_lat'], min_lat=ENV['min_lat
     for _ in range(number_of_vehicle):
         lat = random.uniform(min_lat, max_lat)
         lon = random.uniform(min_lon, max_lon)
-        vehicle = Vehicle(latitude=lat, longitude=lon,velocity=ENV["velocity"])
+        vehicle = Vehicle(latitude=lat, longitude=lon, velocity=ENV["velocity"])
         VEHICLES[vehicle.ID] = vehicle
         vehicles.append(vehicle)
         EMPTY_VEHICLES.add(vehicle)
@@ -39,9 +39,9 @@ def load_data(data_path=ENV['data_path']):
                     )
         stack.append((order_start_time, user))
 
-        USERS[user.user_id]['start_time'] = order_start_time
+        USERS[user]['start_time'] = order_start_time
 
-    return stack[-10:]
+    return stack
 
 
 def vehicle_step(vehicle: Vehicle):
@@ -65,5 +65,6 @@ def run_one_episode():
 
 if __name__ == '__main__':
     run_one_episode()
-    for i in range(10):
-        print(f"user {15091-i}: {USERS[15091-i]}")
+    for user, val in USERS.items():
+        if user.cost != 0:
+            print(f"{user.user_id}: {val}, {user.user_id}'s cost: {user.cost}")

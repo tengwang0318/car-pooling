@@ -192,7 +192,7 @@ class Vehicle:
                         calculate_cost_for_finished_request(self, temp_request)
                         temp_request = self.current_requests.pop(0)
                     temp_user = temp_request.users[0]
-                    USERS[temp_user.user_id]['end_time'] = self.time
+                    USERS[temp_user]['end_time'] = self.time
                     calculate_cost_for_finished_request(self, temp_request)
 
                     print(f"vehicle {self.ID} 在 {self.time} s 跑完了一单 {self.longitude, self.latitude}")

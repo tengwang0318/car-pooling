@@ -6,8 +6,7 @@ def calculate_cost_for_finished_request(vehicle, request: Request):
     if request.users:
         users = request.users
         for user in users:
-            user.cost += request.request_total_distance * ENV["money_per_meter"] / len(
-                request.users)
+            user.cost += request.request_total_distance * ENV["money_per_meter"] / len(request.users)
         vehicle.total_distance += request.request_total_distance
 
 

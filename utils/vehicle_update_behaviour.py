@@ -46,7 +46,7 @@ def vehicle_update_for_one_user(vehicle: Vehicle,
         path_node_list=path_node_lists[0],  # it may be updated later, the default value of it is None.
     )
 
-    USERS[user.user_id]['pickup_time'] = request1.request_total_distance / vehicle.velocity + time
+    USERS[user]['pickup_time'] = request1.request_total_distance / vehicle.velocity + time
     requests.append(request1)
 
     request2 = Request(
@@ -116,7 +116,7 @@ def vehicle_update_for_two_users_at_same_time(vehicle: Vehicle,
         end_node=req1_start_nearest_node,
         path_node_list=path_node_lists[0]
     )
-    USERS[user1.user_id]['pickup_time'] = time + request1.request_total_distance / vehicle.velocity
+    USERS[user1]['pickup_time'] = time + request1.request_total_distance / vehicle.velocity
     requests.append(request1)
 
     request2 = Request(
@@ -133,7 +133,7 @@ def vehicle_update_for_two_users_at_same_time(vehicle: Vehicle,
         end_node=req2_start_nearest_node,
         path_node_list=path_node_lists[1],
     )
-    USERS[user2.user_id]['pickup_time'] = time + (
+    USERS[user2]['pickup_time'] = time + (
             request1.request_total_distance + request2.request_total_distance) / vehicle.velocity
     requests.append(request2)
 
@@ -212,7 +212,7 @@ def vehicle_update_for_two_users_after_u1_heading(vehicle: Vehicle,
         path_node_list=path_node_lists[0],
 
     )
-    USERS[user2.user_id]['pickup_time'] = time + request1.request_total_distance / vehicle.velocity
+    USERS[user2]['pickup_time'] = time + request1.request_total_distance / vehicle.velocity
 
     requests.append(request1)
 
