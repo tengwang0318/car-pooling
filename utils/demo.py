@@ -1,9 +1,16 @@
 import math
 import gurobipy as gp
 from gurobipy import GRB
-from components.vehicle import Vehicle
-from components.user import User
 
+class Vehicle:
+    def __init__(self, latitude: float, longitude: float):
+        self.latitude = latitude
+        self.longitude = longitude
+
+class User:
+    def __init__(self, latitude: float, longitude: float):
+        self.latitude = latitude
+        self.longitude = longitude
 
 def manhattan_distance(lat1, lon1, lat2, lon2):
     km_per_degree_lat = 111
@@ -20,8 +27,7 @@ def manhattan_distance(lat1, lon1, lat2, lon2):
 
     return manhattan_dist
 
-
-def build_model(empty_vehicles: list[Vehicle], one_user_vehicles: list[Vehicle], users: list[User]):
+def build_model(empty_vehicles, one_user_vehicles, users):
     n1 = len(empty_vehicles)  # number of empty cars
     n2 = len(one_user_vehicles)  # number of cars with one passenger willing to share
     m = len(users)  # number of users
@@ -33,14 +39,17 @@ def build_model(empty_vehicles: list[Vehicle], one_user_vehicles: list[Vehicle],
     z = model.addVars(n2, m, vtype=GRB.BINARY, name="z")
     b = model.addVars(n1, vtype=GRB.BINARY, name="b")
 
-    d_ij = [[manhattan_distance(empty_vehicles[i].latitude, empty_vehicles[i].longitude, users[j].start_latitude,
-                                users[j].start_longitude) for j in range(m)] for i in range(n1)]
-    d_jk_prime = [[manhattan_distance(users[j].start_latitude, users[j].start_longitude, users[k].start_latitude,
-                                      users[k].start_longitude) for k in range(m)] for j in range(m)]
-    d_ij_double_prime = [
-        [manhattan_distance(one_user_vehicles[i].latitude, one_user_vehicles[i].longitude, users[j].start_latitude,
-                            users[j].start_longitude) for j in range(m)] for i in range(n2)]
-
+    d_ij = [[manhattan_distance(empty_vehicles[i].latitude, empty_vehicles[i].longitude, users[j].latitude,
+                                users[j].longitude) for j in range(m)] for i in range(n1)]
+    d_jk_prime = [
+        [manhattan_distance(users[j].latitude, users[j].longitude, users[k].latitude, users[k].longitude) for k in
+         range(m)] for j in range(m)]
+    d_ij_double_prime = [[manhattan_distance(one_user_vehicles[i].latitude, one_user_vehicles[i].longitude,
+                                             users[j].latitude, users[j].longitude) for j in range(m)] for i in
+                         range(n2)]
+    print(d_ij)
+    print(d_jk_prime)
+    print(d_ij_double_prime)
     model.setObjective(
         gp.quicksum(x[i, j] * d_ij[i][j] for i in range(n1) for j in range(m)) +
         gp.quicksum(
@@ -62,10 +71,14 @@ def build_model(empty_vehicles: list[Vehicle], one_user_vehicles: list[Vehicle],
     # Each car with one passenger willing to share can be assigned to at most one user
     model.addConstrs((gp.quicksum(z[i, j] for j in range(m)) <= 1 for i in range(n2)), "car_one_sharing")
 
-    # Each user can be assigned to at most one vehicle
-    model.addConstrs((gp.quicksum(x[i, j] for i in range(n1)) +
-                      gp.quicksum(y[i, j, k] for i in range(n1) for k in range(m) if j != k) +
-                      gp.quicksum(z[i, j] for i in range(n2)) == 1 for j in range(m)), "user_one_vehicle")
+    # Each user must be assigned to exactly one vehicle
+    model.addConstrs(
+        (gp.quicksum(x[i, j] for i in range(n1)) +
+         gp.quicksum(y[i, j, k] for i in range(n1) for k in range(m) if j != k) +
+         gp.quicksum(y[i, k, j] for i in range(n1) for k in range(m) if j != k) +
+         gp.quicksum(z[i, j] for i in range(n2)) == 1 for j in range(m)),
+        "user_one_vehicle"
+    )
 
     # Each empty car must be assigned to at least one user if it is used
     model.addConstrs((gp.quicksum(x[i, j] for j in range(m)) + gp.quicksum(
@@ -92,3 +105,24 @@ def build_model(empty_vehicles: list[Vehicle], one_user_vehicles: list[Vehicle],
 
     # Save the model
     model.write("vehicle_dispatch.lp")
+
+def generate_demo_data():
+    empty_vehicles = [
+        Vehicle(latitude=30.5, longitude=114.5),
+
+    ]
+
+    one_user_vehicles = [
+        Vehicle(latitude=100.1, longitude=114.1)
+    ]
+
+    users = [
+        User(latitude=30.5, longitude=114.45),
+        User(latitude=30.5, longitude=114.48),
+    ]
+
+    return empty_vehicles, one_user_vehicles, users
+
+# Generate demo data and build the model
+empty_vehicles, one_user_vehicles, users = generate_demo_data()
+build_model(empty_vehicles, one_user_vehicles, users)

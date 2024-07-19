@@ -40,7 +40,7 @@ Since the cost of calculating the distance using dijkstra algorithm is very expe
 The objective is to minimize the total Manhattan distance between vehicles and users, considering all segments of the vehicle paths:
 
 $$
-\min \sum_{i=1}^{n_1} \sum_{j=1}^{m} x_{ij} \cdot d_{ij} + \sum_{i=1}^{n_1} \sum_{j=1}^{m} \sum_{k=1, k \neq j}^{m} y_{ijk} \cdot (d_{ij} + d_{jk}) + \sum_{i=1}^{n_2} \sum_{j=1}^{m} z_{ij} \cdot d_{ij}
+\min \sum_{i=1}^{n_1} \sum_{j=1}^{m} x_{ij} \cdot d_{ij} + \sum_{i=1}^{n_1} \sum_{j=1}^{m} \sum_{k=1, k \neq j}^{m} y_{ijk} \cdot (d_{ij} + d_{jk}') + \sum_{i=1}^{n_2} \sum_{j=1}^{m} z_{ij} \cdot d_{ij}''
 $$
 
 where:
@@ -48,7 +48,8 @@ where:
 - $y_{ijk}$ is a decision variable that indicates whether empty car $i$ is assigned to pick up user $j$ and then user $k$ (1 if yes, 0 if no).
 - $z_{ij}$ is a decision variable that indicates whether car $i$ with one passenger willing to share is assigned to user $j$ (1 if yes, 0 if no).
 - $d_{ij}$ is the Manhattan distance between vehicle $i$ and user $j$.
-- $d_{jk}$ is the Manhattan distance between user $j$ and user $k$.
+- $d_{jk}'$ is the Manhattan distance between user $j$ and user $k$.
+- $d_{ij}''$ is the Manhattan distance between vehicle $i$ which has one order and user $j$.
 
 #### Constraints
 
@@ -75,7 +76,7 @@ $$
 4. **Each user can be assigned to at most one vehicle**:
 
 $$
-\sum_{i=1}^{n_1} x_{ij} + \sum_{i=1}^{n_1} \sum_{k=1, k \neq j}^{m} y_{ijk} + \sum_{i=1}^{n_2} z_{ij} \leq 1 \quad \forall j = 1, \ldots, m
+\sum_{i=1}^{n_1} x_{ij} + \sum_{i=1}^{n_1} \sum_{k=1, k \neq j}^{m} y_{ijk} +\sum_{i=1}^{n_1} \sum_{j=1, j \neq k}^{m} y_{ijk}  + \sum_{i=1}^{n_2} z_{ij} = 1 \quad \forall j = 1, \ldots, m
 $$
 
 5. **Each empty car must be assigned to at least one user if it is used**:
