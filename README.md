@@ -23,7 +23,7 @@
       2. for type 1: dispatch the excess vehicles into busy area until the number of vehicle equals to the number of order, by using **greedy algorithm**/**LLM**. (LLM is not suitable for this part). Then MIP.
    3. Solve every MIPs with solver/LLM
    4. After determining the decision for every vehicles, running the simulation process.
-3. Using the cost for every user and the waiting time as the metrics.
+3. Using the cost for every user and the waiting time as the metrics. And compare the solving time of MIP Solver and LLM.
 
 ![image-20240719002652806](imgs/procedure.png)
 
