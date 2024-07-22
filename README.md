@@ -55,47 +55,34 @@ where:
 
 the number of empty vehicles * 2 + the number of vehicles with one sharing order <= the number of coming order
 
-1. **Each empty car either not assigned to any user or assigned to exactly two users**:
+1. Every user is assigned one vehicle
+   $$
+   \sum_i x_{ij}+\sum_i\sum_{k,j\ne k} (y_{ijk } + y_{ikj})+\sum_{i'}z_{i',j}=1 \space, \forall \space j
+   $$
 
-$$
-\sum_{j=1}^{m} \sum_{k=1, k \neq j}^{m} y_{ijk} = 2b_i \quad \forall i = 1, \ldots, n_1
-$$
+2. Every empty vehicle pickup at most two people
+   $$
+   \sum_j x_{ij} + \sum_j\sum_{k\ne j}y_{ijk}\le1, \forall i
+   $$
+   
 
-2. **Each empty car can be assigned to at most one user directly**:
+3. Every vehicle which has one passenger pickup at most one people
+   $$
+   \sum_j z_{ij}\le 1,\forall i
+   $$
+   
 
-$$
-\sum_{j=1}^{m} x_{ij} \leq 1 \quad \forall i = 1, \ldots, n_1
-$$
+4. Binary variable
+   $$
+   z_{i',j}=0,1, \forall i',j
+   $$
 
-3. **Each car with one passenger willing to share can be assigned to at most one user**:
+   $$
+   x_{ij}=0,1, \forall i,j
+   $$
 
-$$
-\sum_{j=1}^{m} z_{ij} \leq 1 \quad \forall i = 1, \ldots, n_2
-$$
+   $$
+   y_{ijk}=0,1, \forall i,j,k
+   $$
 
-4. **Each user can be assigned to at most one vehicle**:
-
-$$
-\sum_{i=1}^{n_1} x_{ij} + \sum_{i=1}^{n_1} \sum_{k=1, k \neq j}^{m} y_{ijk} +\sum_{i=1}^{n_1} \sum_{j=1, j \neq k}^{m} y_{ijk}  + \sum_{i=1}^{n_2} z_{ij} = 1 \quad \forall j = 1, \ldots, m
-$$
-
-5. **Each empty car must be assigned to at least one user if it is used**:
-
-$$
-\sum_{j=1}^{m} x_{ij} + \sum_{j=1}^{m} \sum_{k=1, k \neq j}^{m} y_{ijk} \geq b_i \quad \forall i = 1, \ldots, n_1
-$$
-
-6. **Linearization Constraints for $y_{ijk}$**:
-
-$$
-y_{ijk} \leq x_{ij} \quad \forall i = 1, \ldots, n_1, \forall j, k = 1, \ldots, m, j \neq k
-$$
-
-$$
-y_{ijk} \leq x_{ik} \quad \forall i = 1, \ldots, n_1, \forall j, k = 1, \ldots, m, j \neq k
-$$
-
-$$
-y_{ijk} \geq x_{ij} + x_{ik} - 1 \quad \forall i = 1, \ldots, n_1, \forall j, k = 1, \ldots, m, j \neq k
-$$
-
+   

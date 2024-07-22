@@ -2,127 +2,144 @@ import math
 import gurobipy as gp
 from gurobipy import GRB
 
+
 class Vehicle:
     def __init__(self, latitude: float, longitude: float):
         self.latitude = latitude
         self.longitude = longitude
+
 
 class User:
     def __init__(self, latitude: float, longitude: float):
         self.latitude = latitude
         self.longitude = longitude
 
+
 def manhattan_distance(lat1, lon1, lat2, lon2):
-    km_per_degree_lat = 111
-    lat1_rad = math.radians(lat1)
-    lat2_rad = math.radians(lat2)
+    # km_per_degree_lat = 111
+    # lat1_rad = math.radians(lat1)
+    # lat2_rad = math.radians(lat2)
+    #
+    # delta_lat = abs(lat2 - lat1)
+    # delta_lon = abs(lon2 - lon1)
+    #
+    # dist_lat = delta_lat * km_per_degree_lat
+    # dist_lon = delta_lon * km_per_degree_lat * math.cos((lat1_rad + lat2_rad) / 2)
+    #
+    # manhattan_dist = dist_lat + dist_lon
 
-    delta_lat = abs(lat2 - lat1)
-    delta_lon = abs(lon2 - lon1)
+    # return manhattan_dist
+    return abs(lat2 - lat1) + abs(lon2 - lon1)
 
-    dist_lat = delta_lat * km_per_degree_lat
-    dist_lon = delta_lon * km_per_degree_lat * math.cos((lat1_rad + lat2_rad) / 2)
 
-    manhattan_dist = dist_lat + dist_lon
+def build_model(empty_vehicles, one_order_vehicles, users):
+    # Initialize the model
+    model = gp.Model("vehicle_routing")
 
-    return manhattan_dist
+    # Parameters
+    n_vehicles = len(empty_vehicles)
+    n_users = len(users)
+    n_one_order_vehicles = len(one_order_vehicles)
 
-def build_model(empty_vehicles, one_user_vehicles, users):
-    n1 = len(empty_vehicles)  # number of empty cars
-    n2 = len(one_user_vehicles)  # number of cars with one passenger willing to share
-    m = len(users)  # number of users
+    # Distances
+    d = {}
+    d_prime = {}
+    d_double_prime = {}
 
-    model = gp.Model("vehicle_dispatch")
+    for i in range(n_vehicles):
+        for j in range(n_users):
+            d[i, j] = manhattan_distance(empty_vehicles[i].latitude, empty_vehicles[i].longitude, users[j].latitude,
+                                         users[j].longitude)
 
-    x = model.addVars(n1, m, vtype=GRB.BINARY, name="x")
-    y = model.addVars(n1, m, m, vtype=GRB.BINARY, name="y")
-    z = model.addVars(n2, m, vtype=GRB.BINARY, name="z")
-    b = model.addVars(n1, vtype=GRB.BINARY, name="b")
+    for j in range(n_users):
+        for k in range(n_users):
+            if j != k:
+                d_prime[j, k] = manhattan_distance(users[j].latitude, users[j].longitude, users[k].latitude,
+                                                   users[k].longitude)
 
-    d_ij = [[manhattan_distance(empty_vehicles[i].latitude, empty_vehicles[i].longitude, users[j].latitude,
-                                users[j].longitude) for j in range(m)] for i in range(n1)]
-    d_jk_prime = [
-        [manhattan_distance(users[j].latitude, users[j].longitude, users[k].latitude, users[k].longitude) for k in
-         range(m)] for j in range(m)]
-    d_ij_double_prime = [[manhattan_distance(one_user_vehicles[i].latitude, one_user_vehicles[i].longitude,
-                                             users[j].latitude, users[j].longitude) for j in range(m)] for i in
-                         range(n2)]
-    print(d_ij)
-    print(d_jk_prime)
-    print(d_ij_double_prime)
+    for i in range(n_one_order_vehicles):
+        for j in range(n_users):
+            d_double_prime[i, j] = manhattan_distance(users[j].latitude, users[j].longitude,
+                                                      one_order_vehicles[i].latitude,
+                                                      one_order_vehicles[i].longitude)
+
+    # Decision variables
+    x = model.addVars(n_vehicles, n_users, vtype=GRB.BINARY, name="x")
+    y = model.addVars(n_vehicles, n_users, n_users, vtype=GRB.BINARY, name="y")
+    z = model.addVars(n_one_order_vehicles, n_users, vtype=GRB.BINARY, name="z")
+
+    # Objective function
     model.setObjective(
-        gp.quicksum(x[i, j] * d_ij[i][j] for i in range(n1) for j in range(m)) +
+        gp.quicksum(x[i, j] * d[i, j] for i in range(n_vehicles) for j in range(n_users)) +
+        gp.quicksum((d[i, j] + d_prime[j, k]) * y[i, j, k] for i in range(n_vehicles) for j in range(n_users) for k in
+                    range(n_users) if j != k) +
         gp.quicksum(
-            y[i, j, k] * (d_ij[i][j] + d_jk_prime[j][k]) for i in range(n1) for j in range(m) for k in range(m) if
-            j != k) +
-        gp.quicksum(z[i, j] * d_ij_double_prime[i][j] for i in range(n2) for j in range(m)),
+            (d_double_prime[z_i, j] * z[z_i, j] for z_i in range(n_one_order_vehicles) for j in range(n_users))),
         GRB.MINIMIZE
     )
-
     # Constraints
-    # Each empty car either not assigned to any user or assigned to exactly two users
-    model.addConstrs(
-        (gp.quicksum(y[i, j, k] for j in range(m) for k in range(m) if j != k) == 2 * b[i] for i in range(n1)),
-        "empty_car_assignment")
+    for j in range(n_users):
+        model.addConstr(
+            gp.quicksum(x[i, j] for i in range(n_vehicles)) +
+            gp.quicksum(y[i, j, k] for i in range(n_vehicles) for k in range(n_users) if j != k) +
+            gp.quicksum(y[i, k, j] for i in range(n_vehicles) for k in range(n_users) if j != k) +
+            gp.quicksum(z[z_i, j] for z_i in range(n_one_order_vehicles)) == 1,
+            f"constr1_{j}"
+        )
 
-    # Each empty car can be assigned to at most one user directly
-    model.addConstrs((gp.quicksum(x[i, j] for j in range(m)) <= 1 for i in range(n1)), "empty_car_one_user")
+    for i in range(n_vehicles):
+        model.addConstr(
+            gp.quicksum(x[i, j] for j in range(n_users)) +
+            gp.quicksum(y[i, j, k] for j in range(n_users) for k in range(n_users) if j != k) <= 1,
+            f"constr2_{i}"
+        )
 
-    # Each car with one passenger willing to share can be assigned to at most one user
-    model.addConstrs((gp.quicksum(z[i, j] for j in range(m)) <= 1 for i in range(n2)), "car_one_sharing")
+    for z_i in range(n_one_order_vehicles):
+        model.addConstr(
+            gp.quicksum(z[z_i, j] for j in range(n_users)) <= 1,
+            f"constr3_{z_i}"
+        )
 
-    # Each user must be assigned to exactly one vehicle
-    model.addConstrs(
-        (gp.quicksum(x[i, j] for i in range(n1)) +
-         gp.quicksum(y[i, j, k] for i in range(n1) for k in range(m) if j != k) +
-         gp.quicksum(y[i, k, j] for i in range(n1) for k in range(m) if j != k) +
-         gp.quicksum(z[i, j] for i in range(n2)) == 1 for j in range(m)),
-        "user_one_vehicle"
-    )
+    return model
 
-    # Each empty car must be assigned to at least one user if it is used
-    model.addConstrs((gp.quicksum(x[i, j] for j in range(m)) + gp.quicksum(
-        y[i, j, k] for j in range(m) for k in range(m) if j != k) >= b[i] for i in range(n1)), "car_at_least_one_user")
 
-    # Linearization constraints for y_ijk
-    model.addConstrs((y[i, j, k] <= x[i, j] for i in range(n1) for j in range(m) for k in range(m) if j != k),
-                     "linearization1")
-    model.addConstrs((y[i, j, k] <= x[i, k] for i in range(n1) for j in range(m) for k in range(m) if j != k),
-                     "linearization2")
-    model.addConstrs(
-        (y[i, j, k] >= x[i, j] + x[i, k] - 1 for i in range(n1) for j in range(m) for k in range(m) if j != k),
-        "linearization3")
+# Example usage
+empty_vehicles = [
+    Vehicle(100, 30),
+    Vehicle(100, 28),
+    Vehicle(30, 30)
+]
+users = [
+    User(100, 28),
+    User(100, 29),
+    User(100, 29.5),
+    User(30, 27),
+    User(105, 30),
 
-    # Optimize the model
-    model.optimize()
+]
+one_order_vehicles = [
+    Vehicle(102, 30)
+]
 
-    # Print the results
-    if model.status == GRB.OPTIMAL:
-        print("Optimal objective value:", model.objVal)
-        for v in model.getVars():
-            if v.x > 1e-6:
-                print(f"{v.varName} = {v.x}")
+model = build_model(empty_vehicles, one_order_vehicles, users)
+model.optimize()
 
-    # Save the model
-    model.write("vehicle_dispatch.lp")
+# Output the results
+for v in model.getVars():
+    # print(v.varName, v.x)
+    if v.x > 0:
+        # print(f"{v.varName}: {v.x}")
+        if "x" in v.varName:
+            left, right = v.varName.index("["), v.varName.index("]")
+            num1, num2 = v.varName[left + 1:right].split(",")
+            print(f"x: {num1} -> {num2}")
+        elif "y" in v.varName:
+            left, right = v.varName.index("["), v.varName.index("]")
+            num1, num2, num3 = v.varName[left + 1:right].split(",")
+            print(f"y: {num1} -> {num2} -> {num3}")
+        else:
+            left, right = v.varName.index("["), v.varName.index("]")
+            num1, num2 = v.varName[left + 1:right].split(",")
+            print(f"z: {num1} -> {num2}")
 
-def generate_demo_data():
-    empty_vehicles = [
-        Vehicle(latitude=30.5, longitude=114.5),
-
-    ]
-
-    one_user_vehicles = [
-        Vehicle(latitude=100.1, longitude=114.1)
-    ]
-
-    users = [
-        User(latitude=30.5, longitude=114.45),
-        User(latitude=30.5, longitude=114.48),
-    ]
-
-    return empty_vehicles, one_user_vehicles, users
-
-# Generate demo data and build the model
-empty_vehicles, one_user_vehicles, users = generate_demo_data()
-build_model(empty_vehicles, one_user_vehicles, users)
+print(f"Objective value: {model.objVal}")

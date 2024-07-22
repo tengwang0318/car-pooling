@@ -65,7 +65,7 @@ def vehicle_update_for_one_user(vehicle: Vehicle,
     )
     requests.append(request2)
 
-    vehicle.update(requests)
+    vehicle.update(requests, has_requests=False)
 
 
 def vehicle_update_for_two_users_at_same_time(vehicle: Vehicle,
@@ -169,7 +169,7 @@ def vehicle_update_for_two_users_at_same_time(vehicle: Vehicle,
     )
     requests.append(req4)
 
-    vehicle.update(requests)
+    vehicle.update(requests, has_requests=False)
 
 
 def vehicle_update_for_two_users_after_u1_heading(vehicle: Vehicle,
@@ -225,7 +225,7 @@ def vehicle_update_for_two_users_after_u1_heading(vehicle: Vehicle,
         is_pickup_request=False,
         is_dropoff_request=True,
         is_idle_request=False,
-        users=[ user1,user2],
+        users=[user1, user2],
         start_node=req2_start_nearest_node,
         end_node=req1_end_nearest_node,
         path_node_list=path_node_lists[1]
@@ -248,7 +248,7 @@ def vehicle_update_for_two_users_after_u1_heading(vehicle: Vehicle,
     )
     requests.append(request3)
 
-    vehicle.update(requests)
+    vehicle.update(requests, has_requests=True)
 
 
 def vehicle_update_for_repositioning(vehicle: Vehicle,
