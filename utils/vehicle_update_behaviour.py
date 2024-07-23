@@ -71,7 +71,7 @@ def vehicle_update_for_one_user(vehicle: Vehicle,
 def vehicle_update_for_two_users_at_same_time(vehicle: Vehicle,
                                               user1: User,
                                               user2: User,
-                                              path_node_lists: (None, None, None, None),
+                                              path_node_lists= (None, None, None, None),
                                               time=None,
                                               ):
     """
@@ -88,11 +88,11 @@ def vehicle_update_for_two_users_at_same_time(vehicle: Vehicle,
 
     vehicle_lat, vehicle_lon = vehicle.latitude, vehicle.longitude
 
-    req1_start_nearest_node = find_nearest_node(req1_start_lat, req1_start_lon, idx_dic, ENV['resolution'])
-    req1_end_nearest_node = find_nearest_node(req1_end_lat, req1_end_lon, idx_dic, ENV['resolution'])
-    req2_start_nearest_node = find_nearest_node(req2_start_lat, req2_start_lon, idx_dic, ENV['resolution'])
-    req2_end_nearest_node = find_nearest_node(req2_end_lat, req2_end_lon, idx_dic, ENV['resolution'])
-    vehicle_nearest_node = find_nearest_node(vehicle_lat, vehicle_lon, idx_dic, ENV['resolution'])
+    req1_start_nearest_node = find_nearest_node(req1_start_lat, req1_start_lon, idx_dic, ENV['RESOLUTION'])
+    req1_end_nearest_node = find_nearest_node(req1_end_lat, req1_end_lon, idx_dic, ENV['RESOLUTION'])
+    req2_start_nearest_node = find_nearest_node(req2_start_lat, req2_start_lon, idx_dic, ENV['RESOLUTION'])
+    req2_end_nearest_node = find_nearest_node(req2_end_lat, req2_end_lon, idx_dic, ENV['RESOLUTION'])
+    vehicle_nearest_node = find_nearest_node(vehicle_lat, vehicle_lon, idx_dic, ENV['RESOLUTION'])
 
     req1_start_lat, req1_start_lon = graph_idx_2_coord[req1_start_nearest_node]
     req2_start_lat, req2_start_lon = graph_idx_2_coord[req2_start_nearest_node]
@@ -185,10 +185,10 @@ def vehicle_update_for_two_users_after_u1_heading(vehicle: Vehicle,
     req2_end_lon = user2.end_longitude
 
     vehicle_lat, vehicle_lon = vehicle.latitude, vehicle.longitude
-    req1_end_nearest_node = find_nearest_node(req1_end_lat, req1_end_lon, idx_dic, ENV['resolution'])
-    req2_start_nearest_node = find_nearest_node(req2_start_lat, req2_start_lon, idx_dic, ENV['resolution'])
-    req2_end_nearest_node = find_nearest_node(req2_end_lat, req2_end_lon, idx_dic, ENV['resolution'])
-    vehicle_nearest_node = find_nearest_node(vehicle_lat, vehicle_lon, idx_dic, ENV['resolution'])
+    req1_end_nearest_node = find_nearest_node(req1_end_lat, req1_end_lon, idx_dic, ENV['RESOLUTION'])
+    req2_start_nearest_node = find_nearest_node(req2_start_lat, req2_start_lon, idx_dic, ENV['RESOLUTION'])
+    req2_end_nearest_node = find_nearest_node(req2_end_lat, req2_end_lon, idx_dic, ENV['RESOLUTION'])
+    vehicle_nearest_node = find_nearest_node(vehicle_lat, vehicle_lon, idx_dic, ENV['RESOLUTION'])
 
     req2_start_lat, req2_start_lon = graph_idx_2_coord[req2_start_nearest_node]
     req1_end_lat, req1_end_lon = graph_idx_2_coord[req1_end_nearest_node]

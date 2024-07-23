@@ -12,7 +12,7 @@ class Vehicle:
                  current_capacity=0,
                  max_capacity=2,
                  status="EMPTY",
-                 velocity=15,
+                 velocity=15
                  ):
         global ID
         self.ID = ID
@@ -59,12 +59,10 @@ class Vehicle:
                 if self.current_distance < current_distance_high_bound:
                     calculate_cost_for_unfinished_request(self, request, self.current_distance,
                                                           previous_distance_high_bound)
-
                     break
                 else:
                     calculate_cost_for_finished_request(self, request)
                     previous_distance_high_bound = current_distance_high_bound
-            # self.total_distance += self.current_distance
 
         self.current_distance = 0
 
@@ -231,7 +229,7 @@ class Vehicle:
                     temp_request = self.current_requests.pop(0)
 
                     while not temp_request.is_dropoff_request:
-                        self.total_distance += temp_request.request_total_distance
+                        # self.total_distance += temp_request.request_total_distance
                         calculate_cost_for_finished_request(self, temp_request)
                         temp_request = self.current_requests.pop(0)
 

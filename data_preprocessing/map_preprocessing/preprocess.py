@@ -2,6 +2,8 @@ import osmnx as ox
 import h3
 import argparse
 
+from env import *
+
 
 def read_map(city: str = "NewYorkCity"):
     """
@@ -55,7 +57,8 @@ def find_hexagon(lat, lon, resolution):
     return h3_index
 
 
-def find_nearby_hexagons(hex_index, k=1, min_lat=None, max_lat=None, min_lng=None, max_lng=None):
+def find_nearby_hexagons(hex_index, k=1, min_lat=ENV["min_lat"], max_lat=ENV["max_lat"], min_lng=ENV["min_lng"],
+                         max_lng=ENV["max_lng"]):
     """
     Find nearby hexagons for a given hexagon index within k distance.
     """

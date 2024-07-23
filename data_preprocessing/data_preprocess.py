@@ -16,7 +16,7 @@ def load_csv_and_drop_duplication(file_path):
     base_file_path, file_name = os.path.split(file_path)
     new_file_path = os.path.join(base_file_path, f"{file_name.split('.')[0]}_final.csv")
 
-    # drop_indices = df.sample(frac=0.9).index
+    # drop_indices = df.sample(frac=0.999).index
     # df = df.drop(drop_indices)
 
     df['origin_idx'] = df.progress_apply(lambda row: find_hexagon(row['order_lat'], row['order_lng'], 8), axis=1)

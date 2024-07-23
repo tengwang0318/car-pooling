@@ -13,7 +13,7 @@ ENV = {
     "min_lat": 30.09155 + 0.2,
     "max_lat": 31.4370968 - 0.2,
     "data_path": "data/data20161101/order_20161101_final.csv",
-    "car_sharing_rate": 0.6,
+    "car_sharing_rate": 1,
     "velocity": 15
 }
 LP_PATH = f"lp/RESOLUTION_{ENV['RESOLUTION']}_TIME_{ENV['time']}"
@@ -32,15 +32,15 @@ graph_idx_2_coord = dict()
 G = ox.load_graphml(f"data/maps/{ENV['map_name']}")
 gdf_nodes = ox.graph_to_gdfs(G, nodes=True, edges=False)
 
-USERS_IN_REGION = dict()
+USERS_IN_REGION = defaultdict(set)
 
 for node_id, row in gdf_nodes.iterrows():
     lat = row['y']
     lon = row['x']
     coord_2_graph_idx[(lat, lon)] = node_id
     graph_idx_2_coord[node_id] = (lat, lon)
-    temp_idx = h3.geo_to_h3(lat, lon)
-    if temp_idx not in USERS_IN_REGION:
+    temp_idx = h3.geo_to_h3(lat, lon, resolution=ENV["RESOLUTION"])
+    if temp_idx not in USERS_IN_REGION:  # it looks like scan the whole sub area
         USERS_IN_REGION[temp_idx] = set()
 
 nodes_lon, nodes_lat = gdf_nodes['x'].tolist(), gdf_nodes['y'].tolist()
@@ -50,6 +50,7 @@ for lat, lon in zip(nodes_lat, nodes_lon):
     idx_dic[idx].append((lat, lon))
 max_longitude, min_longitude = max(nodes_lon), min(nodes_lon)
 max_latitude, min_latitude = max(nodes_lat), min(nodes_lat)
+
 USERS = defaultdict(dict)
 VEHICLES = dict()
 

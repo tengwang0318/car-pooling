@@ -1,10 +1,6 @@
 import math
-import os.path
-
 import gurobipy as gp
 from gurobipy import GRB
-from components.vehicle import Vehicle
-from components.user import User
 from env import *
 
 
@@ -21,7 +17,7 @@ def manhattan_distance(lat1, lon1, lat2, lon2):
 
     manhattan_dist = dist_lat + dist_lon
 
-    return manhattan_dist
+    return round(manhattan_dist, 2)
 
 
 def build_and_solve_model(empty_vehicles, one_order_vehicles, users):
@@ -37,18 +33,19 @@ def build_and_solve_model(empty_vehicles, one_order_vehicles, users):
 
     for i in range(n_vehicles):
         for j in range(n_users):
-            d[i, j] = manhattan_distance(empty_vehicles[i].latitude, empty_vehicles[i].longitude, users[j].latitude,
-                                         users[j].longitude)
+            d[i, j] = manhattan_distance(empty_vehicles[i].latitude, empty_vehicles[i].longitude,
+                                         users[j].start_latitude,
+                                         users[j].start_longitude)
 
     for j in range(n_users):
         for k in range(n_users):
             if j != k:
-                d_prime[j, k] = manhattan_distance(users[j].latitude, users[j].longitude, users[k].latitude,
-                                                   users[k].longitude)
+                d_prime[j, k] = manhattan_distance(users[j].start_latitude, users[j].start_longitude,
+                                                   users[k].start_latitude, users[k].start_longitude)
 
     for i in range(n_one_order_vehicles):
         for j in range(n_users):
-            d_double_prime[i, j] = manhattan_distance(users[j].latitude, users[j].longitude,
+            d_double_prime[i, j] = manhattan_distance(users[j].start_latitude, users[j].start_longitude,
                                                       one_order_vehicles[i].latitude,
                                                       one_order_vehicles[i].longitude)
 

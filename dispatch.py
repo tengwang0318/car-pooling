@@ -1,9 +1,11 @@
-from env import *
-from components.user import User
+import heapq
 import random
 from utils.vehicle_update_behaviour import *
-import multiprocessing
-from multiprocessing import Manager
+from utils.heuristic_partition import heuristic_partition
+from utils.build_MIP_model import build_and_solve_model
+from utils.parser import parser
+from data_preprocessing.map_preprocessing.preprocess import find_nearby_hexagons
+from utils.vehicle_update_behaviour import *
 
 
 def random_dispatch(current_users: list[User], current_time):
@@ -25,3 +27,103 @@ def random_dispatch(current_users: list[User], current_time):
             current_users.append(temp_user)
 
             continue
+
+
+def classify_the_number_order_and_vehicle(current_users: list[User]):
+    print("分区开始")
+    regions = heuristic_partition(current_users)
+    print("分区结束")
+    more_vehicles, more_orders = [], []
+    for region in regions:
+        vehicles_cnt = 0
+        order_cnt = region[-1]
+        for sub_area in region[:-1]:
+            vehicles_cnt += len(EMPTY_VEHICLES_IN_REGION[sub_area])
+            vehicles_cnt += len(IDLE_VEHICLES_IN_REGION[sub_area])
+            # vehicles_cnt += PARTIAL_CAPACITY_VEHICLES_IN_REGION[sub_area]
+        if vehicles_cnt >= order_cnt:
+            more_vehicles.append(region)
+        else:
+            more_orders.append((order_cnt - vehicles_cnt, region))
+    heapq.heapify(more_orders)
+    return more_vehicles, more_orders
+
+
+def parse_mip_and_dispatch(model, empty_vehicles, partial_capacity_vehicles, users, current_time):
+    x_s, y_s, z_s = parser(model)
+    for vehicle_idx, user_idx in x_s:
+        temp_vehicle = empty_vehicles[vehicle_idx]
+        temp_user = users[user_idx]
+        vehicle_update_for_one_user(temp_vehicle, temp_user, time=current_time)
+    for vehicle_idx, user1_idx, user2_idx in y_s:
+        temp_vehicle = empty_vehicles[vehicle_idx]
+        temp_user1 = users[user1_idx]
+        temp_user2 = users[user2_idx]
+        vehicle_update_for_two_users_at_same_time(temp_vehicle, temp_user1, temp_user2, time=current_time)
+    for vehicle_idx, user_idx in z_s:
+        temp_vehicle = partial_capacity_vehicles[vehicle_idx]
+        temp_user1 = temp_vehicle.current_requests.users[0]
+        temp_user2 = users[user_idx]
+        vehicle_update_for_two_users_after_u1_heading(temp_vehicle, temp_user1, temp_user2, time=current_time)
+
+
+def mip_dispatch(current_users: list[User], current_time):
+    more_vehicles, more_orders = classify_the_number_order_and_vehicle(current_users)
+    print("啥情况???")
+    for more_vehicle_region in more_vehicles:
+        empty_vehicles, partial_capacity_vehicles = [], []
+        users = []
+        for more_vehicle_subarea in more_vehicle_region:
+            empty_vehicles.extend(list(EMPTY_VEHICLES_IN_REGION[more_vehicle_subarea]))
+            empty_vehicles.extend(list(IDLE_VEHICLES_IN_REGION[more_vehicle_subarea]))
+            partial_capacity_vehicles.extend(list(PARTIAL_CAPACITY_VEHICLES_IN_REGION[more_vehicle_subarea]))
+            users.extend(USERS_IN_REGION[more_vehicle_subarea])
+
+        model = build_and_solve_model(empty_vehicles, partial_capacity_vehicles, users)
+
+        parse_mip_and_dispatch(model, empty_vehicles, partial_capacity_vehicles, users, current_time)
+    print("fuck???")
+    failures = []
+    for gap, more_orders_region in more_orders:
+        empty_vehicles, partial_capacity_vehicles = [], []
+        users = []
+        for more_vehicle_subarea in more_orders_region:
+            empty_vehicles.extend(list(EMPTY_VEHICLES_IN_REGION[more_vehicle_subarea]))
+            empty_vehicles.extend(list(IDLE_VEHICLES_IN_REGION[more_vehicle_subarea]))
+            partial_capacity_vehicles.extend(list(PARTIAL_CAPACITY_VEHICLES_IN_REGION[more_vehicle_subarea]))
+            users.extend(USERS_IN_REGION[more_vehicle_subarea])
+            if gap > 0:
+                k = 1
+                while k <= 5:
+                    for near_idx in find_nearby_hexagons(more_vehicle_subarea, k):
+                        if len(EMPTY_VEHICLES_IN_REGION[near_idx]) != 0 or len(
+                                IDLE_VEHICLES_IN_REGION[near_idx]) != 0:
+                            gap -= (len(EMPTY_VEHICLES_IN_REGION[near_idx]) + len(
+                                IDLE_VEHICLES_IN_REGION[near_idx]))
+                            empty_vehicles.extend(list(EMPTY_VEHICLES_IN_REGION[near_idx]))
+                            empty_vehicles.extend(list(IDLE_VEHICLES_IN_REGION[near_idx]))
+
+                            if gap < 0:
+                                break
+                    if gap < 0:
+                        break
+                    k += 1
+        if gap > 0:
+            failures.append(more_orders_region)
+            continue
+
+        model = build_and_solve_model(empty_vehicles, partial_capacity_vehicles, users)
+        parse_mip_and_dispatch(model, empty_vehicles, partial_capacity_vehicles, users, current_time)
+
+    if failures:
+        users = []
+        empty_vehicles = []
+        partial_capacity_vehicles = []
+        for more_orders_region in failures:
+            for more_vehicle_subarea in more_orders_region:
+                empty_vehicles.extend(list(EMPTY_VEHICLES_IN_REGION[more_vehicle_subarea]))
+                empty_vehicles.extend(list(IDLE_VEHICLES_IN_REGION[more_vehicle_subarea]))
+                partial_capacity_vehicles.extend(list(PARTIAL_CAPACITY_VEHICLES_IN_REGION[more_vehicle_subarea]))
+                users.extend(USERS_IN_REGION[more_vehicle_subarea])
+        model = build_and_solve_model(empty_vehicles, partial_capacity_vehicles, users)
+        parse_mip_and_dispatch(model, empty_vehicles, partial_capacity_vehicles, users, current_time)

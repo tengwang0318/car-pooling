@@ -15,9 +15,11 @@ def init_vehicle(number_of_vehicle, max_lat=ENV['max_lat'], min_lat=ENV['min_lat
         lat = random.uniform(min_lat, max_lat)
         lon = random.uniform(min_lon, max_lon)
         vehicle = Vehicle(latitude=lat, longitude=lon, velocity=ENV["velocity"])
+
         VEHICLES[vehicle.ID] = vehicle
+
         EMPTY_VEHICLES.add(vehicle)
-        EMPTY_VEHICLES_IN_REGION[h3.geo_to_h3(lat=lat, lon=lon, resolution=ENV["RESOLUTION"])].add(vehicle)
+        EMPTY_VEHICLES_IN_REGION[h3.geo_to_h3(lat=lat, lng=lon, resolution=ENV["RESOLUTION"])].add(vehicle)
 
 
 def load_data(data_path=ENV['data_path']):
@@ -26,19 +28,20 @@ def load_data(data_path=ENV['data_path']):
     for order_start_time, order_lon, order_lat, dest_lon, dest_lat in \
             zip(df['order_start_time'].tolist()[::-1], df['order_lng'].tolist()[::-1], df['order_lat'].tolist()[::-1],
                 df['dest_lng'].tolist()[::-1], df['dest_lat'].tolist()[::-1]):
-        user = User(enable_share=random.random() > ENV['car_sharing_rate'],
-                    start_latitude=order_lat,
-                    start_longitude=order_lon,
-                    end_latitude=dest_lat,
-                    end_longitude=dest_lon,
-                    start_time=order_start_time,
-                    )
+        user = User(
+            enable_share=True,
+            # enable_share=random.random() > ENV['car_sharing_rate'],
+            start_latitude=order_lat,
+            start_longitude=order_lon,
+            end_latitude=dest_lat,
+            end_longitude=dest_lon,
+            start_time=order_start_time,
+        )
         stack.append((order_start_time, user))
-        USERS_IN_REGION[h3.geo_to_h3(lat=order_lat, lng=order_lon, resolution=ENV['RESOLUTION'])].add(user)
-        USERS[user]['start_time'] = order_start_time
+
+        USERS[user.user_id]['start_time'] = order_start_time
 
     return stack
-
 
 
 def run_one_episode():
@@ -50,8 +53,10 @@ def run_one_episode():
         while stack and stack[-1][0] < current_timestamp:
             user = stack.pop()[1]
             current_users.append(user)
-        random_dispatch(current_users, current_timestamp)
-
+            # USERS_IN_REGION[
+            #     h3.geo_to_h3(lat=user.start_latitude, lng=user.start_longitude, resolution=ENV["RESOLUTION"])].add(user)
+        # random_dispatch(current_users, current_timestamp)
+        mip_dispatch(current_users, current_timestamp)
         for vehicle in VEHICLES.values():
             vehicle.step()
     for vehicle in VEHICLES.values():

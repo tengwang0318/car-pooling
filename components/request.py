@@ -9,7 +9,8 @@ ID = 0
 
 class Request:
     def __init__(self,
-                 enable_share: bool,  # 默认pickup request 是 True, drop off request depends on user's willing
+                 enable_share: bool,
+                 # the default value of pickup request is True, drop off request depends on user's willing
                  is_pickup_request: bool,
                  is_dropoff_request: bool,
                  users: list[User],
@@ -21,7 +22,6 @@ class Request:
                  end_node=None,
                  path_node_list=None,
                  is_idle_request: bool = False,
-
                  ):
         global ID
         self.ID = ID
@@ -50,7 +50,7 @@ class Request:
         else:
             self.path_node_list = nx.shortest_path(G, self.start_node, self.end_node,
                                                    weight="length")  # 可能no path， 需要考虑下
-
+        print(f"!!!\n\n{self.path_node_list}~!!!")
         route_gdf = ox.routing.route_to_gdf(G, self.path_node_list)
         self.path_distance_list = list(route_gdf['length'])
 

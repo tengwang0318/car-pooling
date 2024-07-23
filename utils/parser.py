@@ -5,13 +5,13 @@ def parser(model):
             if "x" in v.varName:
                 left, right = v.varName.index("["), v.varName.index("]")
                 num1, num2 = v.varName[left + 1:right].split(",")
-                x_s.append((num1, num2))
+                x_s.append((int(num1), int(num2)))
             elif "y" in v.varName:
                 left, right = v.varName.index("["), v.varName.index("]")
                 num1, num2, num3 = v.varName[left + 1:right].split(",")
-                y_s.append((num1, num2, num3))
+                y_s.append((int(num1), int(num2), int(num3)))
             else:
                 left, right = v.varName.index("["), v.varName.index("]")
                 num1, num2 = v.varName[left + 1:right].split(",")
-                z_s.append((num1, num2))
+                z_s.append((int(num1), int(num2)))
     return x_s, y_s, z_s

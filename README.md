@@ -25,7 +25,7 @@
    4. After determining the decision for every vehicles, running the simulation process.
 3. Using the cost for every user and the waiting time as the metrics. And compare the solving time of MIP Solver and LLM.
 
-![image-20240719002652806](imgs/procedure.png)
+![procedure](imgs/procedure.png)
 
 
 
