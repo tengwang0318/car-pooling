@@ -229,7 +229,6 @@ class Vehicle:
                     temp_request = self.current_requests.pop(0)
 
                     while not temp_request.is_dropoff_request:
-                        # self.total_distance += temp_request.request_total_distance
                         calculate_cost_for_finished_request(self, temp_request)
                         temp_request = self.current_requests.pop(0)
 

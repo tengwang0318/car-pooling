@@ -20,7 +20,7 @@ def find_nearest_node(lat, lon, idx_dic: dict[str, list], resolution):
     min_lon = None
 
     while True:
-        idxes = h3.k_ring(current_idx, k)
+        idxes = h3.hex_ring(current_idx, k)
         found = False
         for idx in idxes:
             if idx in idx_dic:

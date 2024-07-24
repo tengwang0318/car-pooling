@@ -27,6 +27,11 @@ class Request:
         self.ID = ID
         ID += 1
 
+        previous_start_longitude = start_longitude
+        previous_start_latitude = start_latitude
+        previous_end_longitude = end_longitude
+        previous_end_latitude = end_latitude
+
         if start_node and end_node:
             self.start_node = start_node
             self.end_node = end_node
@@ -48,11 +53,17 @@ class Request:
         if path_node_list:
             self.path_node_list = path_node_list
         else:
-            self.path_node_list = nx.shortest_path(G, self.start_node, self.end_node,
-                                                   weight="length")  # 可能no path， 需要考虑下
-        print(f"!!!\n\n{self.path_node_list}~!!!")
-        route_gdf = ox.routing.route_to_gdf(G, self.path_node_list)
-        self.path_distance_list = list(route_gdf['length'])
+            if self.start_node == self.end_node:
+                self.path_node_list = [self.start_node, self.end_node]
+            else:
+                self.path_node_list = nx.shortest_path(G, self.start_node, self.end_node,
+                                                       weight="length")  # 可能no path， 需要考虑下
+
+        if self.start_node == self.end_node:
+            self.path_distance_list = [0]
+        else:
+            route_gdf = ox.routing.route_to_gdf(G, self.path_node_list)
+            self.path_distance_list = list(route_gdf['length'])
 
         self.request_total_distance = sum(self.path_distance_list)
 

@@ -71,7 +71,7 @@ def vehicle_update_for_one_user(vehicle: Vehicle,
 def vehicle_update_for_two_users_at_same_time(vehicle: Vehicle,
                                               user1: User,
                                               user2: User,
-                                              path_node_lists= (None, None, None, None),
+                                              path_node_lists=(None, None, None, None),
                                               time=None,
                                               ):
     """
@@ -133,6 +133,7 @@ def vehicle_update_for_two_users_at_same_time(vehicle: Vehicle,
         end_node=req2_start_nearest_node,
         path_node_list=path_node_lists[1],
     )
+
     USERS[user2]['pickup_time'] = time + (
             request1.request_total_distance + request2.request_total_distance) / vehicle.velocity
     requests.append(request2)
@@ -175,7 +176,7 @@ def vehicle_update_for_two_users_at_same_time(vehicle: Vehicle,
 def vehicle_update_for_two_users_after_u1_heading(vehicle: Vehicle,
                                                   user1: User,
                                                   user2: User,
-                                                  path_node_lists: (None, None, None),
+                                                  path_node_lists=(None, None, None),
                                                   time=None):
     req1_end_lat = user1.end_latitude
     req1_end_lon = user1.end_longitude

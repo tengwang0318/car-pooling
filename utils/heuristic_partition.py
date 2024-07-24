@@ -11,7 +11,7 @@ def load_users_in_region(current_users):
 
 
 def find_nearby_hexagons(hex_index, k=1, min_lat=None, max_lat=None, min_lng=None, max_lng=None, seen=None):
-    nearby_hexagons = h3.k_ring(hex_index, k)
+    nearby_hexagons = h3.hex_ring(hex_index, k)
     filtered_hexagons = set()
 
     for h3_index in nearby_hexagons:
@@ -25,6 +25,7 @@ def find_nearby_hexagons(hex_index, k=1, min_lat=None, max_lat=None, min_lng=Non
 
 def heuristic_partition(current_users):
     load_users_in_region(current_users)
+
     pq = []
     regions = []
     seen = set()
@@ -32,20 +33,20 @@ def heuristic_partition(current_users):
     for key, set_s in USERS_IN_REGION.items():
         if len(set_s) > 0:
             heapq.heappush(pq, (len(set_s), key))
-    print(f"length is {len(pq)}")
     while pq:
         temp_cnt, temp_idx, = heapq.heappop(pq)
         if temp_idx in seen:
             continue
 
-        if temp_cnt > 50:
+        if temp_cnt > 20:
             seen.add(temp_idx)
             regions.append([temp_idx, temp_cnt])
             continue
         else:
             cnt = temp_cnt
             idxes = [temp_idx]
-            while cnt < 50:
+            seen.add(temp_idx)
+            while cnt < 20:
                 k = 1
                 idx_set = find_nearby_hexagons(temp_idx, k, ENV['min_lat'], ENV['max_lat'], ENV['min_lng'],
                                                ENV['max_lng'], seen=seen)
@@ -53,15 +54,13 @@ def heuristic_partition(current_users):
                 if temp_pq:
                     heapq.heapify(temp_pq)
                     while temp_pq and cnt + temp_pq[0][0] < 50:
-                        temp_cnt, temp_idx = heapq.heappop(temp_pq)
-                        seen.add(temp_idx)
-                        cnt += temp_cnt
-                        idxes.append(temp_idx)
+                        current_cnt, current_idx = heapq.heappop(temp_pq)
+                        seen.add(current_idx)
+                        cnt += current_cnt
+                        idxes.append(current_idx)
                     k += 1
                 else:
                     break
             idxes.append(cnt)
             regions.append(idxes)
-
-    print("分区咋一直不结束")
     return regions

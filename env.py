@@ -17,6 +17,7 @@ ENV = {
     "velocity": 15
 }
 LP_PATH = f"lp/RESOLUTION_{ENV['RESOLUTION']}_TIME_{ENV['time']}"
+os.makedirs(LP_PATH, exist_ok=True)
 LP_CNT = 1
 
 

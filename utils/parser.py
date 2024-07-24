@@ -1,7 +1,7 @@
 def parser(model):
     x_s, y_s, z_s = list(), list(), list()
     for v in model.getVars():
-        if v.x > 0:
+        if v.X > 0:
             if "x" in v.varName:
                 left, right = v.varName.index("["), v.varName.index("]")
                 num1, num2 = v.varName[left + 1:right].split(",")

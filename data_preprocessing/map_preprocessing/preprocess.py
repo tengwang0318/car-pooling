@@ -62,7 +62,7 @@ def find_nearby_hexagons(hex_index, k=1, min_lat=ENV["min_lat"], max_lat=ENV["ma
     """
     Find nearby hexagons for a given hexagon index within k distance.
     """
-    nearby_hexagons = h3.k_ring(hex_index, k)
+    nearby_hexagons = h3.hex_ring(hex_index, k)
     filtered_hexagons = set()
 
     for h3_index in nearby_hexagons:
