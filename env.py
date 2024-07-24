@@ -2,7 +2,9 @@ import os.path
 from collections import defaultdict
 import h3
 import osmnx as ox
+import random
 
+random.seed(64)
 ENV = {
     "RESOLUTION": 8,
     "map_name": "chengdu.graphml",
@@ -23,9 +25,12 @@ LP_CNT = 1
 
 def lp_filepath():
     global LP_CNT
-    path = os.path.join(LP_PATH, f"{LP_CNT}.lp")
+    lp_path = os.path.join(LP_PATH, f"{LP_CNT}.lp")
+    os.makedirs(os.path.join(LP_PATH, "log"), exist_ok=True)
+    log_path = os.path.join(LP_PATH, "log", f"{LP_CNT}.log")
+
     LP_CNT += 1
-    return path
+    return lp_path, log_path
 
 
 coord_2_graph_idx = dict()

@@ -1,6 +1,9 @@
+import heapq
+
 import h3
 from geopy.distance import geodesic
-from env import coord_2_graph_idx
+from env import coord_2_graph_idx, G
+import networkx as nx
 
 
 def find_nearest_node(lat, lon, idx_dic: dict[str, list], resolution):
@@ -36,3 +39,33 @@ def find_nearest_node(lat, lon, idx_dic: dict[str, list], resolution):
         k += 1
 
     return coord_2_graph_idx[(min_lat, min_lon)]
+
+
+def find_nearest_node_except_specific_node(start_lat, start_lon, end_lat, end_lon, idx_dic: dict[str, list],
+                                           resolution: int, visited: set):
+    current_idx = h3.geo_to_h3(start_lat, start_lon, resolution)
+    end_node = coord_2_graph_idx[(end_lat, end_lon)]
+
+    pq = []
+
+    k = 1
+
+    while True:
+        idxes = h3.hex_ring(current_idx, k)
+        for idx in idxes:
+            if idx in idx_dic:
+                for temp_lat, temp_lon in idx_dic[idx]:
+                    temp_distance = geodesic((temp_lat, temp_lon), (end_lat, end_lon)).meters
+                    temp_node = coord_2_graph_idx[(temp_lat, temp_lon)]
+                    if temp_node not in visited:
+                        visited.add(temp_node)
+                        heapq.heappush((temp_distance, temp_lat, temp_lon))
+        while pq:
+            temp_distance, temp_lat, temp_lon = heapq.heappop(pq)
+            try:
+                temp_node = coord_2_graph_idx[(temp_lat, temp_lon)]
+                nx.shortest_path(G, temp_node, end_node, weight="length")
+                return temp_node, temp_lat, temp_lon
+            except:
+                continue
+        k += 1

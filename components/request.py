@@ -1,6 +1,6 @@
 import networkx as nx
 import osmnx as ox
-from utils.find_nearest_node import find_nearest_node
+from utils.find_nearest_node import find_nearest_node, find_nearest_node_except_specific_node
 from env import ENV, idx_dic, G, graph_idx_2_coord
 from .user import User
 
@@ -27,11 +27,6 @@ class Request:
         self.ID = ID
         ID += 1
 
-        previous_start_longitude = start_longitude
-        previous_start_latitude = start_latitude
-        previous_end_longitude = end_longitude
-        previous_end_latitude = end_latitude
-
         if start_node and end_node:
             self.start_node = start_node
             self.end_node = end_node
@@ -56,8 +51,18 @@ class Request:
             if self.start_node == self.end_node:
                 self.path_node_list = [self.start_node, self.end_node]
             else:
-                self.path_node_list = nx.shortest_path(G, self.start_node, self.end_node,
-                                                       weight="length")  # 可能no path， 需要考虑下
+                try:
+                    self.path_node_list = nx.shortest_path(G, self.start_node, self.end_node,
+                                                           weight="length")  # 可能no path
+                except:
+                    temp_node, temp_lat, temp_lon = find_nearest_node_except_specific_node(
+                        start_lat=self.start_latitude, start_lon=self.start_longitude,
+                        end_lat=self.end_latitude, end_lon=self.end_longitude,
+                        idx_dic=idx_dic, resolution=ENV["RESOLUTION"], visited=set(self.start_node)
+                    )
+                    self.start_latitude, self.start_longitude, self.start_node = temp_lat, temp_lon, temp_node
+                    self.path_node_list = nx.shortest_path(G, self.start_node, self.end_node,
+                                                           weight="length")
 
         if self.start_node == self.end_node:
             self.path_distance_list = [0]

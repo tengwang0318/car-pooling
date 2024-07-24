@@ -83,7 +83,11 @@ def build_and_solve_model(empty_vehicles, one_order_vehicles, users):
             gp.quicksum(z[z_i, j] for j in range(n_users)) <= 1,
             f"constr3_{z_i}"
         )
-    model.write(lp_filepath())
+    lp_path, log_path = lp_filepath()
+    model.setParam("LogFile", log_path)
+    model.setParam('OutputFlag', 0)
+
+    model.write(lp_path)
     model.optimize()
 
     return model

@@ -1,3 +1,5 @@
+import os
+
 import h3
 import tqdm
 from env import *
@@ -39,13 +41,14 @@ def load_data(data_path=ENV['data_path']):
         )
         stack.append((order_start_time, user))
 
-        USERS[user.user_id]['start_time'] = order_start_time
+        USERS[user]['start_time'] = order_start_time
 
-    return stack
+    return stack[-10:]
 
 
 def run_one_episode():
     stack = load_data()
+
     init_vehicle(1000)
     for current_timestamp in tqdm.tqdm(range(ENV['time'], 3600 * 16, ENV['time'])):
 
@@ -53,12 +56,15 @@ def run_one_episode():
         while stack and stack[-1][0] < current_timestamp:
             user = stack.pop()[1]
             current_users.append(user)
-            # USERS_IN_REGION[
-            #     h3.geo_to_h3(lat=user.start_latitude, lng=user.start_longitude, resolution=ENV["RESOLUTION"])].add(user)
-        # random_dispatch(current_users, current_timestamp)
-        mip_dispatch(current_users, current_timestamp)
+            USERS_IN_REGION[
+                h3.geo_to_h3(lat=user.start_latitude, lng=user.start_longitude, resolution=ENV["RESOLUTION"])].add(user)
+        if current_users:
+            # random_dispatch(current_users, current_timestamp)
+            mip_dispatch(current_users, current_timestamp)
+
         for vehicle in VEHICLES.values():
             vehicle.step()
+
     for vehicle in VEHICLES.values():
         if vehicle.total_distance != 0:
             print(
