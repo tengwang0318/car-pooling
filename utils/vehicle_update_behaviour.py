@@ -178,6 +178,8 @@ def vehicle_update_for_two_users_after_u1_heading(vehicle: Vehicle,
                                                   user2: User,
                                                   path_node_lists=(None, None, None),
                                                   time=None):
+    vehicle.current_capacity = 0
+
     req1_end_lat = user1.end_latitude
     req1_end_lon = user1.end_longitude
     req2_start_lat = user2.start_latitude

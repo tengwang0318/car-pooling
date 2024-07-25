@@ -27,10 +27,15 @@ def lp_filepath():
     global LP_CNT
     lp_path = os.path.join(LP_PATH, f"{LP_CNT}.lp")
     os.makedirs(os.path.join(LP_PATH, "log"), exist_ok=True)
+    os.makedirs(os.path.join(LP_PATH, "data"), exist_ok=True)
+    os.makedirs(os.path.join(LP_PATH, "solutions"), exist_ok=True)
+
     log_path = os.path.join(LP_PATH, "log", f"{LP_CNT}.log")
+    data_path = os.path.join(LP_PATH, "data", f"{LP_CNT}.json")
+    solution_path = os.path.join(LP_PATH, "solutions", f"solution_{LP_CNT}.json")
 
     LP_CNT += 1
-    return lp_path, log_path
+    return lp_path, log_path, data_path, solution_path
 
 
 coord_2_graph_idx = dict()

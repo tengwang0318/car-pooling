@@ -190,8 +190,6 @@ class Vehicle:
             PARTIAL_CAPACITY_VEHICLES_IN_REGION[previous_region].discard(self)
         elif previous_status == "EMPTY":
             EMPTY_VEHICLES_IN_REGION[previous_region].discard(self)
-        else:
-            assert "FUCK"
 
         if self.status == "IDLE":
             IDLE_VEHICLES_IN_REGION[self.h3idx].add(self)
@@ -201,8 +199,6 @@ class Vehicle:
             PARTIAL_CAPACITY_VEHICLES_IN_REGION[self.h3idx].add(self)
         elif self.status == "EMPTY":
             EMPTY_VEHICLES_IN_REGION[self.h3idx].add(self)
-        else:
-            assert "SHITY"
 
     def step(self):
         self.time += ENV['time']
@@ -255,6 +251,8 @@ class Vehicle:
                         self.n1 = 0
                         self.n2 = 0
                         # print("变成empty了吗？", self.status)
+                else:
+                    self.update_status(previous_region, is_idle=False)
 
         elif self.status == "IDLE":
             if self.current_idx == self.n1 or self.current_distance >= self.pre_sum_dis1[-1]:  # 停到原地不动了。
@@ -263,7 +261,7 @@ class Vehicle:
                 self.h3idx = h3.geo_to_h3(self.latitude, self.longitude, ENV['RESOLUTION'])
                 self.total_distance += self.current_distance
                 self.update([], has_requests=False)  # it will be empty.
-                return
+
             previous_region = self.h3idx
             self.current_distance += self.velocity * ENV['time']
             while self.current_idx < self.n1 and self.current_distance < self.pre_sum_dis1[self.current_idx]:

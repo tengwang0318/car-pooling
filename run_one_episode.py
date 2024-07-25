@@ -43,7 +43,8 @@ def load_data(data_path=ENV['data_path']):
 
         USERS[user]['start_time'] = order_start_time
 
-    return stack[-10:]
+    # return stack[-20:]
+    return stack
 
 
 def run_one_episode():
@@ -68,11 +69,13 @@ def run_one_episode():
     for vehicle in VEHICLES.values():
         if vehicle.total_distance != 0:
             print(
-                f"vehicle total distance: {vehicle.total_distance}, pickup distance: {vehicle.pickup_distance}, and dropout distance: {vehicle.dropoff_distance}")
+                f"vehicle {vehicle.ID} total distance: {vehicle.total_distance}, pickup distance: {vehicle.pickup_distance}, and dropout distance: {vehicle.dropoff_distance}")
 
 
 if __name__ == '__main__':
     run_one_episode()
     for user, val in USERS.items():
-        if user.cost != 0:
+        if "pickup_time" in val:
+            # if user.cost != 0:
+            #     print(f"{user.user_id}: {val}, {user.user_id}'s cost: {user.cost}")
             print(f"{user.user_id}: {val}, {user.user_id}'s cost: {user.cost}")

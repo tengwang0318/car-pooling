@@ -55,10 +55,11 @@ class Request:
                     self.path_node_list = nx.shortest_path(G, self.start_node, self.end_node,
                                                            weight="length")  # 可能no path
                 except:
+
                     temp_node, temp_lat, temp_lon = find_nearest_node_except_specific_node(
                         start_lat=self.start_latitude, start_lon=self.start_longitude,
-                        end_lat=self.end_latitude, end_lon=self.end_longitude,
-                        idx_dic=idx_dic, resolution=ENV["RESOLUTION"], visited=set(self.start_node)
+                        end_node=self.end_node,
+                        idx_dic=idx_dic, resolution=ENV["RESOLUTION"], visited={self.start_node}
                     )
                     self.start_latitude, self.start_longitude, self.start_node = temp_lat, temp_lon, temp_node
                     self.path_node_list = nx.shortest_path(G, self.start_node, self.end_node,

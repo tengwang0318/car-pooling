@@ -2,7 +2,7 @@ import heapq
 
 import h3
 from geopy.distance import geodesic
-from env import coord_2_graph_idx, G
+from env import coord_2_graph_idx, G, graph_idx_2_coord
 import networkx as nx
 
 
@@ -41,10 +41,10 @@ def find_nearest_node(lat, lon, idx_dic: dict[str, list], resolution):
     return coord_2_graph_idx[(min_lat, min_lon)]
 
 
-def find_nearest_node_except_specific_node(start_lat, start_lon, end_lat, end_lon, idx_dic: dict[str, list],
+def find_nearest_node_except_specific_node(start_lat, start_lon, end_node, idx_dic: dict[str, list],
                                            resolution: int, visited: set):
     current_idx = h3.geo_to_h3(start_lat, start_lon, resolution)
-    end_node = coord_2_graph_idx[(end_lat, end_lon)]
+    end_lat, end_lon = graph_idx_2_coord[end_node]
 
     pq = []
 
@@ -59,7 +59,7 @@ def find_nearest_node_except_specific_node(start_lat, start_lon, end_lat, end_lo
                     temp_node = coord_2_graph_idx[(temp_lat, temp_lon)]
                     if temp_node not in visited:
                         visited.add(temp_node)
-                        heapq.heappush((temp_distance, temp_lat, temp_lon))
+                        heapq.heappush(pq, (temp_distance, temp_lat, temp_lon))
         while pq:
             temp_distance, temp_lat, temp_lon = heapq.heappop(pq)
             try:

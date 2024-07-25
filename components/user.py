@@ -3,7 +3,7 @@ user_id = 0
 
 class User:
 
-    def __init__(self, enable_share, start_latitude, start_longitude, end_latitude, end_longitude,start_time):
+    def __init__(self, enable_share, start_latitude, start_longitude, end_latitude, end_longitude, start_time):
         global user_id
         self.user_id = user_id
         user_id += 1
