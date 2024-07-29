@@ -50,10 +50,11 @@ def load_data(data_path=ENV['data_path']):
 def run_one_episode():
     stack = load_data()
 
-    init_vehicle(1000)
+    init_vehicle(ENV['vehicle_number'])
+    current_users = []
+
     for current_timestamp in tqdm.tqdm(range(ENV['time'], 3600 * 16, ENV['time'])):
 
-        current_users = []
         while stack and stack[-1][0] < current_timestamp:
             user = stack.pop()[1]
             current_users.append(user)
@@ -61,7 +62,7 @@ def run_one_episode():
                 h3.geo_to_h3(lat=user.start_latitude, lng=user.start_longitude, resolution=ENV["RESOLUTION"])].add(user)
         if current_users:
             # random_dispatch(current_users, current_timestamp)
-            mip_dispatch(current_users, current_timestamp)
+            current_users = mip_dispatch(current_users, current_timestamp)
 
         for vehicle in VEHICLES.values():
             vehicle.step()
@@ -76,6 +77,4 @@ if __name__ == '__main__':
     run_one_episode()
     for user, val in USERS.items():
         if "pickup_time" in val:
-            # if user.cost != 0:
-            #     print(f"{user.user_id}: {val}, {user.user_id}'s cost: {user.cost}")
             print(f"{user.user_id}: {val}, {user.user_id}'s cost: {user.cost}")

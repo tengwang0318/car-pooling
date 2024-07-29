@@ -17,7 +17,8 @@ ENV = {
     "data_path": "data/data20161101/order_20161101_final.csv",
     "car_sharing_rate": 1,
     "velocity": 15,
-    "split_size": 20
+    "split_size": 30,
+    "vehicle_number": 1000
 }
 LP_PATH = f"lp/RESOLUTION_{ENV['RESOLUTION']}_TIME_{ENV['time']}"
 os.makedirs(LP_PATH, exist_ok=True)

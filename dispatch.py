@@ -1,4 +1,5 @@
 import heapq
+import os
 import random
 from utils.vehicle_update_behaviour import *
 from utils.heuristic_partition import heuristic_partition
@@ -55,21 +56,17 @@ def classify_the_number_order_and_vehicle(current_users: list[User]):
 
 def parse_mip_and_dispatch(model, empty_vehicles, partial_capacity_vehicles, users, current_time):
     x_s, y_s, z_s = parser(model)
-    # print("------------")
     for vehicle_idx, user_idx in x_s:
         temp_vehicle = empty_vehicles[vehicle_idx]
         temp_user = users[user_idx]
         vehicle_update_for_one_user(temp_vehicle, temp_user, time=current_time)
-        # print(f"{temp_vehicle.ID} picks up {temp_user.user_id}")
-    # print("------------")
+
     for vehicle_idx, user1_idx, user2_idx in y_s:
         temp_vehicle = empty_vehicles[vehicle_idx]
         temp_user1 = users[user1_idx]
         temp_user2 = users[user2_idx]
 
         vehicle_update_for_two_users_at_same_time(temp_vehicle, temp_user1, temp_user2, time=current_time)
-        # print(f"{temp_vehicle.ID} picks up {temp_user1.user_id} firstly and then picks up {temp_user2.user_id}")
-    # print("------------")
     for vehicle_idx, user_idx in z_s:
         temp_vehicle = partial_capacity_vehicles[vehicle_idx]
         try:
@@ -78,8 +75,6 @@ def parse_mip_and_dispatch(model, empty_vehicles, partial_capacity_vehicles, use
             temp_user1 = temp_vehicle.current_requests[0].users[0]
         temp_user2 = users[user_idx]
         vehicle_update_for_two_users_after_u1_heading(temp_vehicle, temp_user1, temp_user2, time=current_time)
-        # print(f"{temp_vehicle.ID} has already picked up {temp_user1} and then picks up {temp_user2.user_id}")
-    # print("------------")
 
 
 def mip_dispatch(current_users: list[User], current_time):
@@ -151,6 +146,7 @@ def mip_dispatch(current_users: list[User], current_time):
         model = build_and_solve_model(empty_vehicles, partial_capacity_vehicles, users)
         parse_mip_and_dispatch(model, empty_vehicles, partial_capacity_vehicles, users, current_time)
 
+    redundant_users = []
     if failures:
         users = []
         empty_vehicles = list(EMPTY_VEHICLES)
@@ -159,7 +155,13 @@ def mip_dispatch(current_users: list[User], current_time):
             for more_vehicle_subarea in more_orders_region[:-1]:
                 users.extend(USERS_IN_REGION[more_vehicle_subarea])
 
+        total_feasible_length = 2 * len(empty_vehicles) + len(partial_capacity_vehicles)
+        while total_feasible_length < len(users):
+            redundant_users.append(users.pop(random.randrange(len(users))))
+
         model = build_and_solve_model(empty_vehicles, partial_capacity_vehicles, users)
         parse_mip_and_dispatch(model, empty_vehicles, partial_capacity_vehicles, users, current_time)
     for area in USERS_IN_REGION.keys():
         USERS_IN_REGION[area] = set()
+
+    return redundant_users
