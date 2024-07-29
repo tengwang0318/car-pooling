@@ -18,7 +18,8 @@ ENV = {
     "car_sharing_rate": 1,
     "velocity": 15,
     "split_size": 30,
-    "vehicle_number": 1000
+    "number_of_neighbors": 6,
+    "vehicle_number": 2000
 }
 LP_PATH = f"lp/RESOLUTION_{ENV['RESOLUTION']}_TIME_{ENV['time']}"
 os.makedirs(LP_PATH, exist_ok=True)

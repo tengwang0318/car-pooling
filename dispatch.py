@@ -114,7 +114,7 @@ def mip_dispatch(current_users: list[User], current_time):
 
             if gap > 0:
                 k = 1
-                while k <= 5:
+                while k <= ENV['number_of_neighbors']:
                     seen_subarea = [more_vehicle_subarea]
                     for near_idx in find_nearby_hexagons(more_vehicle_subarea, k):
                         if near_idx in visited_subareas:
