@@ -147,21 +147,32 @@ def mip_dispatch(current_users: list[User], current_time):
         parse_mip_and_dispatch(model, empty_vehicles, partial_capacity_vehicles, users, current_time)
 
     redundant_users = []
+    user2loc = {}
+    deleted_user2loc = {}
     if failures:
         users = []
         empty_vehicles = list(EMPTY_VEHICLES)
         partial_capacity_vehicles = list(PARTIAL_CAPACITY_VEHICLES)
+
         for more_orders_region in failures:
             for more_vehicle_subarea in more_orders_region[:-1]:
                 users.extend(USERS_IN_REGION[more_vehicle_subarea])
+                # 屎山添屎
+                for user in USERS_IN_REGION[more_vehicle_subarea]:
+                    user2loc[user] = more_vehicle_subarea
 
         total_feasible_length = 2 * len(empty_vehicles) + len(partial_capacity_vehicles)
         while total_feasible_length < len(users):
-            redundant_users.append(users.pop(random.randrange(len(users))))
+            temp_user = users.pop(random.randrange(len(users)))
+            redundant_users.append(temp_user)
+            deleted_user2loc[temp_user] = user2loc[temp_user]
 
         model = build_and_solve_model(empty_vehicles, partial_capacity_vehicles, users)
         parse_mip_and_dispatch(model, empty_vehicles, partial_capacity_vehicles, users, current_time)
     for area in USERS_IN_REGION.keys():
         USERS_IN_REGION[area] = set()
+    #屎山驾驶
+    for temp_user, subarea in deleted_user2loc.items():
+        USERS_IN_REGION[subarea].add(temp_user)
 
     return redundant_users
