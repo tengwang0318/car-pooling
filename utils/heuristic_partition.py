@@ -46,7 +46,7 @@ def heuristic_partition(current_users):
             cnt = temp_cnt
             idxes = [temp_idx]
             seen.add(temp_idx)
-            while cnt < 20:
+            while cnt < ENV['split_size']:
                 k = 1
                 idx_set = find_nearby_hexagons(temp_idx, k, ENV['min_lat'], ENV['max_lat'], ENV['min_lng'],
                                                ENV['max_lng'], seen=seen)

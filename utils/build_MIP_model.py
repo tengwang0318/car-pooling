@@ -8,26 +8,28 @@ from collections import defaultdict
 from env import *
 
 
+def lat_lon_to_xy(lat, lon):
+    R = 6371.0
+
+    lat_rad = math.radians(lat)
+    lon_rad = math.radians(lon)
+
+    x = R * lon_rad
+    y = R * math.log(math.tan(math.pi / 4 + lat_rad / 2))
+
+    return round(x - 11474.16255996467, 2), round(y - 3537.118802722021, 2)
+
+
 def manhattan_distance(lat1, lon1, lat2, lon2):
-    km_per_degree_lat = 111
-    lat1_rad = math.radians(lat1)
-    lat2_rad = math.radians(lat2)
-
-    delta_lat = abs(lat2 - lat1)
-    delta_lon = abs(lon2 - lon1)
-
-    dist_lat = delta_lat * km_per_degree_lat
-    dist_lon = delta_lon * km_per_degree_lat * math.cos((lat1_rad + lat2_rad) / 2)
-
-    manhattan_dist = dist_lat + dist_lon
-
-    return round(manhattan_dist, 2)
+    x1, y1 = lat_lon_to_xy(lat1, lon1)
+    x2, y2 = lat_lon_to_xy(lat2, lon2)
+    return abs(x1 - x2) + abs(y1 - y2)
 
 
 def generate_json(empty_vehicles, one_order_vehicles, users):
-    empty_list = [(round(v.latitude, 4), round(v.longitude, 4)) for v in empty_vehicles]
-    one_order_list = [(round(v.latitude, 4), round(v.longitude, 4)) for v in one_order_vehicles]
-    user_list = [(u.start_latitude, u.start_longitude) for u in users]
+    empty_list = [lat_lon_to_xy(v.latitude, v.longitude) for v in empty_vehicles]
+    one_order_list = [lat_lon_to_xy(v.latitude, v.longitude) for v in one_order_vehicles]
+    user_list = [lat_lon_to_xy(u.start_latitude, u.start_longitude) for u in users]
     data = {
         "empty_vehicles": empty_list,
         "one_order_vehicles": one_order_list,
@@ -39,16 +41,15 @@ def generate_json(empty_vehicles, one_order_vehicles, users):
 def parse_and_store_var(var, value, dic):
     if "x" in var.varName:
         num1, num2 = var.varName[var.varName.index("[") + 1:var.varName.index("]")].split(",")
-        dic['x'].append((num1, num2, value))
+        dic['x'].append((int(num1), int(num2), value))
     elif "y" in var.varName:
         num1, num2, num3 = var.varName[var.varName.index("[") + 1:var.varName.index("]")].split(",")
-        dic['y'].append((num1, num2, num3, value))
+        dic['y'].append((int(num1), int(num2), int(num3), value))
     else:
         num1, num2 = var.varName[var.varName.index("[") + 1:var.varName.index("]")].split(",")
-        dic['z'].append((num1, num2, value))
+        dic['z'].append((int(num1), int(num2), value))
 
 
-# 回调函数，捕捉中间解
 intermediate_solutions = []
 
 
@@ -63,13 +64,15 @@ def my_callback(model, where):
             if value != 0:
                 parse_and_store_var(var, value, intermediate_solution)
 
+        objective_value = model.cbGet(gp.GRB.Callback.MIPSOL_OBJBST)
+
         intermediate_solutions.append({
             "solution": intermediate_solution,
-            "gap": relative_gap
+            "gap": relative_gap,
+            "objective_value": objective_value
         })
 
 
-# 建立和求解模型的函数
 def build_and_solve_model(empty_vehicles, one_order_vehicles, users):
     model = gp.Model("vehicle_routing")
 
@@ -134,8 +137,7 @@ def build_and_solve_model(empty_vehicles, one_order_vehicles, users):
 
     lp_path, log_path, data_path, solution_path = lp_filepath()
     model.setParam("LogFile", log_path)
-    model.setParam("Threads", 4)
-
+    model.setParam(GRB.Param.TimeLimit, 300)
     model.write(lp_path)
     model.optimize(my_callback)
     end_time = time.time()
@@ -151,10 +153,14 @@ def build_and_solve_model(empty_vehicles, one_order_vehicles, users):
             parse_and_store_var(v, v.X, final_solution)
 
     final_gap = model.MIPGap
+    objective_value = model.ObjVal
+
     intermediate_solutions.append({
         "solution": final_solution,
-        "gap": final_gap
+        "gap": final_gap,
+        "objective_value": objective_value
     })
+
     intermediate_solutions.append({"time": end_time - start_time})
     with open(solution_path, "w") as f:
 

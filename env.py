@@ -1,4 +1,4 @@
-import os.path
+import os
 from collections import defaultdict
 import h3
 import osmnx as ox
@@ -16,7 +16,8 @@ ENV = {
     "max_lat": 31.4370968 - 0.2,
     "data_path": "data/data20161101/order_20161101_final.csv",
     "car_sharing_rate": 1,
-    "velocity": 15
+    "velocity": 15,
+    "split_size": 20
 }
 LP_PATH = f"lp/RESOLUTION_{ENV['RESOLUTION']}_TIME_{ENV['time']}"
 os.makedirs(LP_PATH, exist_ok=True)
