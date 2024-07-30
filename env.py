@@ -18,10 +18,11 @@ ENV = {
     "car_sharing_rate": 1,
     "velocity": 15,
     "split_size": 30,
-    "number_of_neighbors": 6,
-    "vehicle_number": 2000
+    "number_of_neighbors": 8,
+    "gurobi_run_time_for_simulation": 180,  # find a satisfactory feasible solution as fast as I can
+    "vehicle_number": 2000,
 }
-LP_PATH = f"lp/RESOLUTION_{ENV['RESOLUTION']}_TIME_{ENV['time']}"
+LP_PATH = f"lp/RESOLUTION_{ENV['RESOLUTION']}_TIME_{ENV['time']}_{ENV['data_path'].split('/')[-2]}"
 os.makedirs(LP_PATH, exist_ok=True)
 LP_CNT = 1
 

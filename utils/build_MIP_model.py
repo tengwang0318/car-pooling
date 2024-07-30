@@ -137,7 +137,7 @@ def build_and_solve_model(empty_vehicles, one_order_vehicles, users):
 
     lp_path, log_path, data_path, solution_path = lp_filepath()
     model.setParam("LogFile", log_path)
-    model.setParam(GRB.Param.TimeLimit, 300)
+    model.setParam(GRB.Param.TimeLimit, ENV['gurobi_run_time_for_simulation'])
     model.write(lp_path)
     model.optimize(my_callback)
     end_time = time.time()

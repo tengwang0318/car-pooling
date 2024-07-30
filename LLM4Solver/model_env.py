@@ -1,3 +1,6 @@
+from huggingface_hub import login
+
+login("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")
 TRAIN_FILE = "../train.csv"
 VALID_FILE = "../valid.csv"
 TEST_FILE = "../test.csv"
@@ -19,4 +22,6 @@ PER_DEVICE_VALID_BATCH_SIZE = 16
 GRADIENT_ACCUMULATION_STEPS = 2
 LEARNING_RATE = 2e-4
 
-MAX_LENGTH = 8192
+# MAX_LENGTH = 39219
+MAX_LENGTH = 8198
+MAX_LENGTH_GAP = 1024
