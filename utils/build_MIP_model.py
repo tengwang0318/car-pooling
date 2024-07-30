@@ -137,12 +137,21 @@ def build_and_solve_model(empty_vehicles, one_order_vehicles, users):
 
     lp_path, log_path, data_path, solution_path = lp_filepath()
     model.setParam("LogFile", log_path)
-    model.setParam(GRB.Param.TimeLimit, ENV['gurobi_run_time_for_simulation'])
-    model.write(lp_path)
+    initial_time_limit = ENV['gurobi_run_time_for_simulation']
+    model.setParam(GRB.Param.TimeLimit, initial_time_limit)
     model.optimize(my_callback)
     end_time = time.time()
 
+    # Check if the initial time limit was reached
+    if model.status == GRB.Status.TIME_LIMIT:
+        print("Initial time limit reached. Extending the time limit and/or setting a relative gap target.")
+        additional_time_limit = 1200  # additional time in seconds (e.g., 10 minutes)
+        model.setParam(GRB.Param.TimeLimit, additional_time_limit)
+        model.setParam(GRB.Param.MIPGap, 0.50)  # set the relative gap to 10%
+        model.optimize(my_callback)
+
     json_data = generate_json(empty_vehicles, one_order_vehicles, users)
+    model.write(lp_path)
 
     with open(data_path, "w") as f:
         f.write(json_data)
@@ -163,7 +172,6 @@ def build_and_solve_model(empty_vehicles, one_order_vehicles, users):
 
     intermediate_solutions.append({"time": end_time - start_time})
     with open(solution_path, "w") as f:
-
         json.dump(intermediate_solutions, f, indent=4)
 
     while intermediate_solutions:

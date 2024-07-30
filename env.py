@@ -6,7 +6,7 @@ import random
 
 random.seed(64)
 ENV = {
-    "RESOLUTION": 8,
+    "RESOLUTION": 7,
     "map_name": "chengdu.graphml",
     "time": 60,
     "money_per_meter": 0.005,
@@ -18,7 +18,7 @@ ENV = {
     "car_sharing_rate": 1,
     "velocity": 15,
     "split_size": 30,
-    "number_of_neighbors": 8,
+    "number_of_neighbors": 6,
     "gurobi_run_time_for_simulation": 180,  # find a satisfactory feasible solution as fast as I can
     "vehicle_number": 2000,
 }
