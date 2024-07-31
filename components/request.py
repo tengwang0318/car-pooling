@@ -55,16 +55,18 @@ class Request:
                     self.path_node_list = nx.shortest_path(G, self.start_node, self.end_node,
                                                            weight="length")  # 可能no path
                 except:
-
-                    temp_node, temp_lat, temp_lon = find_nearest_node_except_specific_node(
-                        start_lat=self.start_latitude, start_lon=self.start_longitude,
-                        end_node=self.end_node,
-                        idx_dic=idx_dic, resolution=ENV["RESOLUTION"], visited={self.start_node}
+                    print("卡到fine near node???")
+                    start_node, start_lat, start_lon, end_node, end_lat, end_lon = find_nearest_node_except_specific_node(
+                        start_lat=self.start_latitude, start_lon=self.start_longitude, start_node=self.start_node,
+                        end_lat=self.end_latitude, end_lon=self.end_latitude, end_node=self.end_node,
+                        idx_dic=idx_dic, resolution=ENV["RESOLUTION"]
                     )
-                    self.start_latitude, self.start_longitude, self.start_node = temp_lat, temp_lon, temp_node
+                    print("没卡到 find near node")
+                    self.start_latitude, self.start_longitude, self.start_node = start_lat, start_lon, start_node
+                    self.end_latitude, self.end_longitude, self.end_node = end_lat, end_lon, end_node
                     self.path_node_list = nx.shortest_path(G, self.start_node, self.end_node,
                                                            weight="length")
-
+                    print("找到路径")
         if self.start_node == self.end_node:
             self.path_distance_list = [0]
         else:

@@ -8,7 +8,7 @@ random.seed(64)
 ENV = {
     "RESOLUTION": 7,
     "map_name": "chengdu.graphml",
-    "time": 60,
+    "time": 15,
     "money_per_meter": 0.005,
     "min_lng": 102.989623 + 0.2,
     "max_lng": 104.8948475 - 0.2,
@@ -20,7 +20,7 @@ ENV = {
     "split_size": 30,
     "number_of_neighbors": 6,
     "gurobi_run_time_for_simulation": 180,  # find a satisfactory feasible solution as fast as I can
-    "vehicle_number": 2000,
+    "vehicle_number": 600,
 }
 LP_PATH = f"lp/RESOLUTION_{ENV['RESOLUTION']}_TIME_{ENV['time']}_{ENV['data_path'].split('/')[-2]}"
 os.makedirs(LP_PATH, exist_ok=True)

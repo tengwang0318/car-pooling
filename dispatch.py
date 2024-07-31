@@ -7,6 +7,7 @@ from utils.build_MIP_model import build_and_solve_model
 from utils.parser import parser
 from data_preprocessing.map_preprocessing.preprocess import find_nearby_hexagons
 from utils.vehicle_update_behaviour import *
+from utils.build_MIP_model import parse_and_store_var
 
 
 def random_dispatch(current_users: list[User], current_time):
@@ -59,22 +60,28 @@ def parse_mip_and_dispatch(model, empty_vehicles, partial_capacity_vehicles, use
     for vehicle_idx, user_idx in x_s:
         temp_vehicle = empty_vehicles[vehicle_idx]
         temp_user = users[user_idx]
+        print("方式1运行好了吗？")
         vehicle_update_for_one_user(temp_vehicle, temp_user, time=current_time)
-
+        print("方式1运行结束")
     for vehicle_idx, user1_idx, user2_idx in y_s:
         temp_vehicle = empty_vehicles[vehicle_idx]
         temp_user1 = users[user1_idx]
         temp_user2 = users[user2_idx]
-
+        print("方式2运行好了吗？")
         vehicle_update_for_two_users_at_same_time(temp_vehicle, temp_user1, temp_user2, time=current_time)
+        print("方式2运行结束")
     for vehicle_idx, user_idx in z_s:
         temp_vehicle = partial_capacity_vehicles[vehicle_idx]
-        try:
+        if len(temp_vehicle.current_requests) == 2:
             temp_user1 = temp_vehicle.current_requests[1].users[0]
-        except:
+        else:
             temp_user1 = temp_vehicle.current_requests[0].users[0]
+
         temp_user2 = users[user_idx]
+        print("方式3运行好了吗？")
+
         vehicle_update_for_two_users_after_u1_heading(temp_vehicle, temp_user1, temp_user2, time=current_time)
+        print("方式3运行结束")
 
 
 def mip_dispatch(current_users: list[User], current_time):
@@ -89,11 +96,13 @@ def mip_dispatch(current_users: list[User], current_time):
             partial_capacity_vehicles.extend(list(PARTIAL_CAPACITY_VEHICLES_IN_REGION[more_vehicle_subarea]))
             users.extend(USERS_IN_REGION[more_vehicle_subarea])
         assert len(empty_vehicles) == len(set(empty_vehicles))
-
+        print("车多建模")
         model = build_and_solve_model(empty_vehicles, partial_capacity_vehicles, users)
-
+        print("车多建模完成，得到结果")
         parse_mip_and_dispatch(model, empty_vehicles, partial_capacity_vehicles, users, current_time)
-
+        print("车多调度完成")
+    print("more orders派送完毕")
+    print("less orders开始派送")
     failures = []
     for gap, more_orders_region in more_orders:
         visited_subareas = set()
@@ -142,10 +151,19 @@ def mip_dispatch(current_users: list[User], current_time):
         if gap > 0:
             failures.append(more_orders_region)
             continue
-
+        print("车少合并之后开始建模")
         model = build_and_solve_model(empty_vehicles, partial_capacity_vehicles, users)
-        parse_mip_and_dispatch(model, empty_vehicles, partial_capacity_vehicles, users, current_time)
+        print("车少得到解")
 
+        print(empty_vehicles)
+        print(partial_capacity_vehicles)
+        print(users)
+        for v in model.getVars():
+            if v.X > 0:
+                print(v.X)
+
+        parse_mip_and_dispatch(model, empty_vehicles, partial_capacity_vehicles, users, current_time)
+        print("车少开始调度")
     redundant_users = []
     user2loc = {}
     deleted_user2loc = {}
@@ -166,13 +184,15 @@ def mip_dispatch(current_users: list[User], current_time):
             temp_user = users.pop(random.randrange(len(users)))
             redundant_users.append(temp_user)
             deleted_user2loc[temp_user] = user2loc[temp_user]
-
+        print("全局分配开始")
         model = build_and_solve_model(empty_vehicles, partial_capacity_vehicles, users)
+        print("全局得到结果")
         parse_mip_and_dispatch(model, empty_vehicles, partial_capacity_vehicles, users, current_time)
+        print("全局开始调度")
     for area in USERS_IN_REGION.keys():
         USERS_IN_REGION[area] = set()
-    #屎山驾驶
-    for temp_user, subarea in deleted_user2loc.items():
-        USERS_IN_REGION[subarea].add(temp_user)
+    # # 屎山驾驶
+    # for temp_user, subarea in deleted_user2loc.items():
+    #     USERS_IN_REGION[subarea].add(temp_user)
 
     return redundant_users

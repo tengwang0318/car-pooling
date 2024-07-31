@@ -145,7 +145,7 @@ def build_and_solve_model(empty_vehicles, one_order_vehicles, users):
     # Check if the initial time limit was reached
     if model.status == GRB.Status.TIME_LIMIT:
         print("Initial time limit reached. Extending the time limit and/or setting a relative gap target.")
-        additional_time_limit = 1200  # additional time in seconds (e.g., 10 minutes)
+        additional_time_limit = 600  # additional time in seconds (e.g., 10 minutes)
         model.setParam(GRB.Param.TimeLimit, additional_time_limit)
         model.setParam(GRB.Param.MIPGap, 0.50)  # set the relative gap to 10%
         model.optimize(my_callback)

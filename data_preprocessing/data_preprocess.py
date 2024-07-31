@@ -6,6 +6,23 @@ import pandas as pd
 from tqdm import tqdm
 from map_preprocessing.preprocess import find_hexagon
 
+ENV = {
+    "RESOLUTION": 7,
+    "map_name": "chengdu.graphml",
+    "time": 15,
+    "money_per_meter": 0.005,
+    "min_lng": 102.989623 + 0.2,
+    "max_lng": 104.8948475 - 0.2,
+    "min_lat": 30.09155 + 0.2,
+    "max_lat": 31.4370968 - 0.2,
+    "data_path": "data/data20161101/order_20161101_final.csv",
+    "car_sharing_rate": 1,
+    "velocity": 15,
+    "split_size": 30,
+    "number_of_neighbors": 6,
+    "gurobi_run_time_for_simulation": 180,  # find a satisfactory feasible solution as fast as I can
+    "vehicle_number": 2000,
+}
 tqdm.pandas()
 
 
@@ -16,8 +33,8 @@ def load_csv_and_drop_duplication(file_path):
     base_file_path, file_name = os.path.split(file_path)
     new_file_path = os.path.join(base_file_path, f"{file_name.split('.')[0]}_final.csv")
 
-    # drop_indices = df.sample(frac=0.999).index
-    # df = df.drop(drop_indices)
+    drop_indices = df.sample(frac=0.7).index
+    df = df.drop(drop_indices)
 
     df['origin_idx'] = df.progress_apply(lambda row: find_hexagon(row['order_lat'], row['order_lng'], 8), axis=1)
     df['dest_idx'] = df.progress_apply(lambda row: find_hexagon(row['dest_lat'], row['dest_lng'], 8), axis=1)
@@ -84,7 +101,7 @@ if __name__ == '__main__':
     if not os.path.exists(path2):
         load_csv_and_drop_duplication("../data/data20161102/order_20161102.csv")
     threshold = 3600
-    filter_outliers(path1, threshold, min_lng=102.989623, max_lng=104.8948475, min_lat=30.09155, max_lat=31.4370968,
-                    year=2016, month=11, day=1)
-    filter_outliers(path2, threshold, min_lng=102.989623, max_lng=104.8948475, min_lat=30.09155, max_lat=31.4370968,
-                    year=2016, month=11, day=2)
+    filter_outliers(path1, threshold, min_lng=ENV['min_lng'], max_lng=ENV["max_lng"], min_lat=ENV["min_lat"],
+                    max_lat=ENV["max_lat"], year=2016, month=11, day=1)
+    filter_outliers(path2, threshold, min_lng=ENV['min_lng'], max_lng=ENV["max_lng"], min_lat=ENV["min_lat"],
+                    max_lat=ENV["max_lat"], year=2016, month=11, day=2)

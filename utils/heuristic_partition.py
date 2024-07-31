@@ -4,14 +4,14 @@ import heapq
 
 
 # 日后怎么删除这些users
-def load_users_in_region(current_users):
-    for current_user in current_users:
-        lat, lon = current_user.start_latitude, current_user.start_longitude
-        USERS_IN_REGION[h3.geo_to_h3(lat, lon, resolution=ENV['RESOLUTION'])].add(current_user)
+# def load_users_in_region(current_users):
+#     for current_user in current_users:
+#         lat, lon = current_user.start_latitude, current_user.start_longitude
+#         USERS_IN_REGION[h3.geo_to_h3(lat, lon, resolution=ENV['RESOLUTION'])].add(current_user)
 
 
 def find_nearby_hexagons(hex_index, k=1, min_lat=None, max_lat=None, min_lng=None, max_lng=None, seen=None):
-    nearby_hexagons = h3.hex_ring(hex_index, k)
+    nearby_hexagons = h3.k_ring(hex_index, k)
     filtered_hexagons = set()
 
     for h3_index in nearby_hexagons:
@@ -24,7 +24,7 @@ def find_nearby_hexagons(hex_index, k=1, min_lat=None, max_lat=None, min_lng=Non
 
 
 def heuristic_partition(current_users):
-    load_users_in_region(current_users)
+    # load_users_in_region(current_users)
 
     pq = []
     regions = []
@@ -38,29 +38,51 @@ def heuristic_partition(current_users):
         if temp_idx in seen:
             continue
 
-        if temp_cnt > 20:
+        if temp_cnt > ENV['split_size']:
             seen.add(temp_idx)
             regions.append([temp_idx, temp_cnt])
             continue
         else:
+            print("运行这部分了？？？？？")
             cnt = temp_cnt
             idxes = [temp_idx]
             seen.add(temp_idx)
-            while cnt < ENV['split_size']:
-                k = 1
-                idx_set = find_nearby_hexagons(temp_idx, k, ENV['min_lat'], ENV['max_lat'], ENV['min_lng'],
-                                               ENV['max_lng'], seen=seen)
-                temp_pq = [(len(USERS_IN_REGION[idx]), idx) for idx in idx_set if len(USERS_IN_REGION[idx]) != 0]
-                if temp_pq:
-                    heapq.heapify(temp_pq)
-                    while temp_pq and cnt + temp_pq[0][0] < 50:
-                        current_cnt, current_idx = heapq.heappop(temp_pq)
+
+            # while cnt < ENV['split_size']:
+            idx_set = find_nearby_hexagons(temp_idx, ENV['number_of_neighbors'], ENV['min_lat'], ENV['max_lat'],
+                                           ENV['min_lng'],
+                                           ENV['max_lng'], seen=seen)
+            temp_pq = [(len(USERS_IN_REGION[idx]), idx) for idx in idx_set if len(USERS_IN_REGION[idx]) != 0]
+            if temp_pq:
+                heapq.heapify(temp_pq)
+                while temp_pq and cnt + temp_pq[0][0] < ENV['split_size']:
+                    current_cnt, current_idx = heapq.heappop(temp_pq)
+                    if current_idx not in seen:
                         seen.add(current_idx)
                         cnt += current_cnt
                         idxes.append(current_idx)
-                    k += 1
-                else:
-                    break
+
+            # k = 1
+            # while cnt < ENV['split_size']:
+            #     idx_set = find_nearby_hexagons(temp_idx, k, ENV['min_lat'], ENV['max_lat'], ENV['min_lng'],
+            #                                    ENV['max_lng'], seen=seen)
+            #     temp_pq = [(len(USERS_IN_REGION[idx]), idx) for idx in idx_set if len(USERS_IN_REGION[idx]) != 0]
+            #     if temp_pq:
+            #         heapq.heapify(temp_pq)
+            #         while temp_pq and cnt + temp_pq[0][0] < 50:
+            #             current_cnt, current_idx = heapq.heappop(temp_pq)
+            #             if current_idx not in seen:
+            #                 seen.add(current_idx)
+            #                 cnt += current_cnt
+            #                 idxes.append(current_idx)
+            #         k += 1
+            #
+            #     else:
+            #         break
+            #     if k >= ENV['number_of_neighbors']:
+            #         break
             idxes.append(cnt)
             regions.append(idxes)
+            print("跑完了？？")
+
     return regions

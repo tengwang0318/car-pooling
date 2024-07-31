@@ -54,19 +54,26 @@ def run_one_episode():
     current_users = []
 
     for idx, current_timestamp in enumerate(tqdm.tqdm(range(ENV['time'], 3600 * 16, ENV['time']))):
+        if current_users:
+            for user in current_users:
+                USERS_IN_REGION[
+                    h3.geo_to_h3(lat=user.start_latitude, lng=user.start_longitude, resolution=ENV["RESOLUTION"])].add(
+                    user)
+
         while stack and stack[-1][0] < current_timestamp:
             user = stack.pop()[1]
             current_users.append(user)
             USERS_IN_REGION[
                 h3.geo_to_h3(lat=user.start_latitude, lng=user.start_longitude, resolution=ENV["RESOLUTION"])].add(user)
-
-        if current_users and (EMPTY_VEHICLES or IDLE_VEHICLES or PARTIAL_CAPACITY_VEHICLES):
+        print("准备开始分配订单")
+        if current_users and (EMPTY_VEHICLES or IDLE_VEHICLES):
+            print("分配吗?")
             # random_dispatch(current_users, current_timestamp)
             current_users = mip_dispatch(current_users, current_timestamp)
         print("订单分配完成，准备step")
         for vehicle in VEHICLES.values():
             vehicle.step()
-        print("当前time range, 车辆运动完成")
+        print(f"当前time range{current_timestamp}, 车辆运动完成")
     for vehicle in VEHICLES.values():
         if vehicle.total_distance != 0:
             print(

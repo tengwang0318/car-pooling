@@ -1,8 +1,10 @@
 import osmnx as ox
 import h3
 import argparse
+from env import ENV
 
-from env import *
+
+# from env import *
 
 
 def read_map(city: str = "NewYorkCity"):
