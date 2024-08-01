@@ -65,15 +65,15 @@ def run_one_episode():
             current_users.append(user)
             USERS_IN_REGION[
                 h3.geo_to_h3(lat=user.start_latitude, lng=user.start_longitude, resolution=ENV["RESOLUTION"])].add(user)
-        print("准备开始分配订单")
+        # print("准备开始分配订单")
         if current_users and (EMPTY_VEHICLES or IDLE_VEHICLES):
-            print("分配吗?")
+            # print("分配吗?")
             # random_dispatch(current_users, current_timestamp)
             current_users = mip_dispatch(current_users, current_timestamp)
-        print("订单分配完成，准备step")
+        # print("订单分配完成，准备step")
         for vehicle in VEHICLES.values():
             vehicle.step()
-        print(f"当前time range{current_timestamp}, 车辆运动完成")
+        # print(f"当前time range{current_timestamp}, 车辆运动完成")
     for vehicle in VEHICLES.values():
         if vehicle.total_distance != 0:
             print(

@@ -54,23 +54,43 @@ intermediate_solutions = []
 
 
 def my_callback(model, where):
-    if where == gp.GRB.Callback.MIPSOL:
+    if where == GRB.Callback.MIPSOL:
         solution = model.cbGetSolution(model.getVars())
-        current_gap = model.cbGet(gp.GRB.Callback.MIPSOL_OBJBST) - model.cbGet(gp.GRB.Callback.MIPSOL_OBJBND)
-        relative_gap = abs(current_gap) / (1e-10 + abs(model.cbGet(gp.GRB.Callback.MIPSOL_OBJBST)))
+        current_obj = sum(var.Obj * value for var, value in zip(model.getVars(), solution))
+        # current_obj = model.cbGet(GRB.Callback.MIPSOL_OBJBST)
+        best_bound = model.cbGet(GRB.Callback.MIPSOL_OBJBND)
+        current_gap = (current_obj - best_bound) / (1e-10 + abs(current_obj))
 
         intermediate_solution = defaultdict(list)
         for var, value in zip(model.getVars(), solution):
             if value != 0:
                 parse_and_store_var(var, value, intermediate_solution)
 
-        objective_value = model.cbGet(gp.GRB.Callback.MIPSOL_OBJBST)
-
         intermediate_solutions.append({
-            "solution": intermediate_solution,
-            "gap": relative_gap,
-            "objective_value": objective_value
+            "solution": dict(intermediate_solution),
+            "gap": current_gap,
+            "objective_value": current_obj
         })
+
+
+# def my_callback(model, where):
+#     if where == gp.GRB.Callback.MIPSOL:
+#
+#         current_obj = model.cbGet(GRB.Callback.MIP_OBJBST)
+#         solution = model.cbGetSolution(model.getVars())
+#         best_bound = model.cbGet(GRB.Callback.MIP_OBJBND)
+#         current_gap = (current_obj - best_bound) / (1e-10 + abs(current_obj))
+#
+#         intermediate_solution = defaultdict(list)
+#         for var, value in zip(model.getVars(), solution):
+#             if value != 0:
+#                 parse_and_store_var(var, value, intermediate_solution)
+#
+#         intermediate_solutions.append({
+#             "solution": intermediate_solution,
+#             "gap": current_gap,
+#             "objective_value": current_obj
+#         })
 
 
 def build_and_solve_model(empty_vehicles, one_order_vehicles, users):
@@ -160,15 +180,38 @@ def build_and_solve_model(empty_vehicles, one_order_vehicles, users):
     for v in model.getVars():
         if v.X > 0:
             parse_and_store_var(v, v.X, final_solution)
-
     final_gap = model.MIPGap
+
+    # intermediate_solutions[-1]['gap'] = final_gap
+
     objective_value = model.ObjVal
 
-    intermediate_solutions.append({
-        "solution": final_solution,
-        "gap": final_gap,
-        "objective_value": objective_value
-    })
+    def check_equal(solution1: dict[list[list[int]]], solution2: dict[list[list[int]]]):
+        if set(solution1.keys()) != set(solution2.keys()):
+            return False
+        for key, list1 in solution1.items():
+            list2 = solution2[key]
+            if len(list1) != len(list2):
+                return False
+            for list1_1, list2_2 in zip(list1, list2):
+                if len(list1_1) != len(list2_2):
+                    return False
+                for num1, num2 in zip(list1_1, list2_2):
+                    if num1 != num2:
+                        return False
+        return True
+
+    if objective_value == intermediate_solutions[-1]['objective_value'] and check_equal(final_solution,
+                                                                                        intermediate_solutions[-1][
+                                                                                            'solution']):
+        intermediate_solutions[-1]['gap'] = final_gap
+
+    else:
+        intermediate_solutions.append({
+            "solution": final_solution,
+            "gap": final_gap,
+            "objective_value": objective_value
+        })
 
     intermediate_solutions.append({"time": end_time - start_time})
     with open(solution_path, "w") as f:

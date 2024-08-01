@@ -43,7 +43,7 @@ def heuristic_partition(current_users):
             regions.append([temp_idx, temp_cnt])
             continue
         else:
-            print("运行这部分了？？？？？")
+            # print("运行这部分了？？？？？")
             cnt = temp_cnt
             idxes = [temp_idx]
             seen.add(temp_idx)
@@ -83,6 +83,6 @@ def heuristic_partition(current_users):
             #         break
             idxes.append(cnt)
             regions.append(idxes)
-            print("跑完了？？")
+            # print("跑完了？？")
 
     return regions
