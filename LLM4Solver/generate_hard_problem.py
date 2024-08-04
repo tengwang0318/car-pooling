@@ -10,7 +10,7 @@ from collections import defaultdict
 CNT = 1
 
 
-def load_all_category(folder_path="/Users/code/simulator/lp"):
+def load_all_category(folder_path="lp"):
     categories = []
     for temp_folder in os.listdir(folder_path):
         if os.path.isfile(os.path.join(folder_path, temp_folder)):
@@ -28,7 +28,7 @@ def parse_json_and_filter_hard_problem(folder_path):
         json_path = os.path.join(solution_folder_path, json_file)
         json_obj = json.load(open(json_path))
         # print(json_obj)
-        if json_obj[-2]['gap'] > 0.001:
+        if json_obj[-2]['gap'] > 0.01:
             data_path = os.path.join(folder_path, "data", f"{cnt}.json")
             lp_path = os.path.join(folder_path, f"{cnt}.lp")
             # file_paths.append((data_path, json_path, lp_path))
@@ -36,7 +36,7 @@ def parse_json_and_filter_hard_problem(folder_path):
     return file_paths
 
 
-def collect_all_hard_problem(folder_path="/Users/code/simulator/lp"):
+def collect_all_hard_problem(folder_path="lp"):
     all_hard_problems = []
     categories = load_all_category(folder_path)
     for category in categories:
@@ -84,12 +84,12 @@ def my_callback(model, where):
             if value != 0:
                 parse_and_store_var(var, value, intermediate_solution)
 
-        objective_value = model.cbGet(gp.GRB.Callback.MIPSOL_OBJBST)
+        current_obj = sum(var.Obj * value for var, value in zip(model.getVars(), solution))
 
         intermediate_solutions.append({
             "solution": intermediate_solution,
             "gap": relative_gap,
-            "objective_value": objective_value
+            "objective_value": current_obj
         })
 
 
@@ -100,7 +100,7 @@ def solve_lp(lp_file, cnt):
     model = gp.read(lp_file)
     model.setParam("LogFile", log_path)
     model.setParam(GRB.Param.TimeLimit, 1200)
-    model.setParam(GRB.Param.MIPGap, 0.01)
+    model.setParam(GRB.Param.MIPGap, 0.001)
     model.optimize(my_callback)
     end_time = time.time()
 
@@ -111,12 +111,33 @@ def solve_lp(lp_file, cnt):
 
     final_gap = model.MIPGap
     objective_value = model.ObjVal
+    def check_equal(solution1: dict[list[list[int]]], solution2: dict[list[list[int]]]):
+        if set(solution1.keys()) != set(solution2.keys()):
+            return False
+        for key, list1 in solution1.items():
+            list2 = solution2[key]
+            if len(list1) != len(list2):
+                return False
+            for list1_1, list2_2 in zip(list1, list2):
+                if len(list1_1) != len(list2_2):
+                    return False
+                for num1, num2 in zip(list1_1, list2_2):
+                    if num1 != num2:
+                        return False
+        return True
 
-    intermediate_solutions.append({
-        "solution": final_solution,
-        "gap": final_gap,
-        "objective_value": objective_value
-    })
+    if objective_value == intermediate_solutions[-1]['objective_value'] and check_equal(final_solution,
+                                                                                        intermediate_solutions[-1][
+                                                                                            'solution']):
+        intermediate_solutions[-1]['gap'] = final_gap
+
+    else:
+        intermediate_solutions.append({
+            "solution": final_solution,
+            "gap": final_gap,
+            "objective_value": objective_value
+        })
+
 
     intermediate_solutions.append({"time": end_time - start_time})
     with open(solution_path, "w") as f:

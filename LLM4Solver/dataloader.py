@@ -77,15 +77,17 @@ def parse_solution(data):
             z_text += f"({z1}, {z2}) "
 
         text = "\n".join(
-            [x_text, y_text, z_text]) + f"\ngap: {data_['gap']}, objective value: {data_['objective_value']}"
-        gaps.append(data_['gap'])
-        objective_values.append(data_['objective_value'])
+            [x_text, y_text,
+             z_text]) + f"\ngap: {round(data_['gap'], 4)}, objective value: {round(data_['objective_value'], 2)}"
+        gaps.append(round(data_['gap'], 4))
+        # gaps.append(data_['gap'])
+        objective_values.append(round(data_['objective_value'], 2), )
         solutions.append(text)
     return solutions, time, gaps, objective_values
 
 
 def generate_prompt(previous_solutions, model_data, is_inference=False, is_random=False, ascending=True,
-                    descending=False, ratio=0):
+                    descending=False, ratio=0.5):
     prompt = r"""Your task is to find the optimal solution for a carpool dispatch problem.
 If you cannot find the optimal solution, you should try to return a better feasible solution.
 The background is as follows:
@@ -171,13 +173,17 @@ If no one is assigned to a car with one existing passenger, the z line is \n.
     if current_length > MAX_LENGTH:
         return False, False, False
 
-    # if is_random:
-    #     length = len(solutions)
-    #     N = max(1, int(length * ratio))
-    #     indices = sorted(random.sample(range(1, length), N))
-    #     solutions = [solutions[i] for i in indices]
-    #     gaps = [gaps[i] for i in indices]
-    #     objective_values = [objective_values[i] for i in indices]
+    if is_random:
+        length = len(solutions)
+        if length == 1:
+            N_MAX = 1
+        else:
+            N_MAX = 2
+        N = max(N_MAX, int(length * ratio))
+        indices = sorted(random.sample(range(length), N))
+        solutions = [solutions[i] for i in indices]
+        gaps = [gaps[i] for i in indices]
+        objective_values = [objective_values[i] for i in indices]
 
     idx2length = {}
     template = "Solution {}:\n{}\n\n"
@@ -190,9 +196,10 @@ If no one is assigned to a car with one existing passenger, the z line is \n.
     if ascending:  # based on gap
         temp_text = ""
         idx = max_length - 1
-        if current_length + idx2length[idx] <= MAX_LENGTH - MAX_LENGTH_GAP:
+        if current_length + idx2length[idx] >= MAX_LENGTH - MAX_LENGTH_GAP:
             return False, False, False
-        while idx > 0 and current_length + idx2length[idx] <= MAX_LENGTH - MAX_LENGTH_GAP:
+        standard = 1 if len(solutions) != 1 else 0
+        while idx >= standard and current_length + idx2length[idx] <= MAX_LENGTH - MAX_LENGTH_GAP:
             current_length += idx2length[idx]
             temp_text = "one of solutions starts:\n" + solutions[idx] + "\none of solutions ends\n\n" + temp_text
 
@@ -203,10 +210,14 @@ If no one is assigned to a car with one existing passenger, the z line is \n.
         objective_values = [objective_values[i] for i in range(idx + 1, max_length)]
     elif descending:
         temp_text = ""
-        idx = 1
+        if len(solutions) == 1:
+            idx = 0
+        else:
+            idx = 1
+
         if current_length + idx2length[idx] <= MAX_LENGTH - MAX_LENGTH_GAP:
             return False, False, False
-        while idx < max_length and current_length + idx2length[idx] <= MAX_LENGTH - MAX_LENGTH_GAP:
+        while idx < max_length and current_length + idx2length[idx] >= MAX_LENGTH - MAX_LENGTH_GAP:
             current_length += idx2length[idx]
             temp_text = temp_text + "one of solutions starts:\n" + solutions[idx] + "\none of solutions ends\n\n"
 
@@ -262,8 +273,17 @@ def generate_dataset(path="/Users/code/simulator/lp",
     else:
         for one_category_dic in category_dic.values():
             for previous_solutions, previous_data in zip(one_category_dic['solution'], one_category_dic['data']):
-                prompt, gaps, objective_values = generate_prompt(previous_solutions, previous_data, is_inference=False,
-                                                                 is_random=True, ratio=0.5)
+                prompt, gaps, objective_values = generate_prompt(previous_solutions, previous_data, ascending=True,
+                                                                 descending=False, is_inference=False, is_random=True,
+                                                                 ratio=0.5)
+                if prompt is not False:
+                    prompts.append(prompt)
+                    all_gaps.append(gaps)
+                    all_objective_values.append(objective_values)
+
+                prompt, gaps, objective_values = generate_prompt(previous_solutions, previous_data, descending=True,
+                                                                 ascending=False, is_inference=False, is_random=True,
+                                                                 ratio=0.5)
 
                 if prompt is not False:
                     prompts.append(prompt)
@@ -282,4 +302,4 @@ def generate_dataset(path="/Users/code/simulator/lp",
 
 if __name__ == '__main__':
     generate_dataset(is_from_gurobi=True)
-    # generate_dataset(is_from_gurobi=False)
+    generate_dataset(is_from_gurobi=False)

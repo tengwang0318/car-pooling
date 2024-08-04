@@ -6,7 +6,7 @@ import random
 
 random.seed(64)
 ENV = {
-    "RESOLUTION": 7,
+    "RESOLUTION": 5,
     "map_name": "chengdu.graphml",
     "time": 15,
     "money_per_meter": 0.005,
